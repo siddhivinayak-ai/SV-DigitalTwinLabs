@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TwinLabs.Core\TwinLabs.Core.csproj" />
+    <ProjectReference Include="..\TwinLabs.Simulation\TwinLabs.Simulation.csproj" />
+    <ProjectReference Include="..\TwinLabs.Analytics\TwinLabs.Analytics.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

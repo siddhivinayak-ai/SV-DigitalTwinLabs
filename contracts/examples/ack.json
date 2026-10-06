@@ -1,0 +1,6 @@
+{
+  "type": "ack",
+  "t": 780000,
+  "seq": 3902,
+  "data": { "commandId": "c-0007", "ok": false, "error": "Unknown asset 'CNC-09'" }
+}

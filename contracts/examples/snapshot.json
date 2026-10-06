@@ -1,0 +1,52 @@
+{
+  "type": "snapshot",
+  "t": 0,
+  "seq": 1,
+  "data": {
+    "plant": {
+      "id": "line-mini",
+      "name": "Mini Line (example)",
+      "version": 1,
+      "seed": 7,
+      "assets": [
+        {
+          "id": "SRC-01", "name": "Feeder", "kind": "source",
+          "position": { "x": 0, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 1.6, "y": 1.4, "z": 1.6 },
+          "downstream": ["CNC-01"],
+          "params": { "arrivalIntervalS": 22, "arrivalStdS": 2 }
+        },
+        {
+          "id": "CNC-01", "name": "CNC Mill", "kind": "machine",
+          "position": { "x": 4, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 3, "y": 2.4, "z": 2.2 },
+          "downstream": ["SNK-01"],
+          "params": { "cycleTimeS": 50, "mtbfS": 7200, "mttrS": 600, "scrapRate": 0.02 }
+        },
+        {
+          "id": "SNK-01", "name": "Dock", "kind": "sink",
+          "position": { "x": 8, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 1.6, "y": 1, "z": 1.6 },
+          "downstream": [],
+          "params": {}
+        }
+      ],
+      "sensors": [
+        { "id": "CNC-01.temp", "assetId": "CNC-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 70, "hiHi": 80 },
+        { "id": "SNK-01.good", "assetId": "SNK-01", "kind": "count", "unit": "pcs", "noise": 0 }
+      ]
+    },
+    "sim": { "state": "stopped", "speed": 1, "simTimeMs": 0, "tick": 0, "seed": 7 },
+    "assets": [
+      { "id": "SRC-01", "state": "idle", "stateSinceMs": 0, "load": 0, "wear": 0, "wip": 0, "good": 0, "scrap": 0, "cycleProgress": 0 },
+      { "id": "CNC-01", "state": "idle", "stateSinceMs": 0, "load": 0, "wear": 0, "wip": 0, "good": 0, "scrap": 0, "cycleProgress": 0 },
+      { "id": "SNK-01", "state": "idle", "stateSinceMs": 0, "load": 0, "wear": 0, "wip": 0, "good": 0, "scrap": 0, "cycleProgress": 0 }
+    ],
+    "sensors": [
+      { "id": "CNC-01.temp", "v": 24 },
+      { "id": "SNK-01.good", "v": 0 }
+    ],
+    "parts": [],
+    "alarms": [],
+    "events": [
+      { "id": 1, "timeMs": 0, "kind": "info", "severity": "info", "message": "Simulation reset (seed 7)" }
+    ]
+  }
+}

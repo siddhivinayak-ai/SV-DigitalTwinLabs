@@ -1,0 +1,18 @@
+{
+  "type": "alarm",
+  "t": 702400,
+  "seq": 3512,
+  "data": {
+    "id": "ALM-CNC-01.vib-limit",
+    "source": "limit",
+    "severity": "warning",
+    "assetId": "CNC-01",
+    "message": "CNC-01.vib HI 4.62 mm/s > 4.5",
+    "raisedAtMs": 702400,
+    "active": true,
+    "acknowledged": false,
+    "sensorId": "CNC-01.vib",
+    "value": 4.62,
+    "limit": 4.5
+  }
+}

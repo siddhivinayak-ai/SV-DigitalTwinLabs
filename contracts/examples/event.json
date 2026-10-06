@@ -1,0 +1,15 @@
+{
+  "type": "event",
+  "t": 755800,
+  "seq": 3779,
+  "data": {
+    "id": 118,
+    "timeMs": 755800,
+    "kind": "state",
+    "severity": "critical",
+    "message": "CNC-02 FAULT: spindle overload (MTTR est. 600 s)",
+    "assetId": "CNC-02",
+    "from": "running",
+    "to": "fault"
+  }
+}

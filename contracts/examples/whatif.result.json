@@ -1,0 +1,20 @@
+{
+  "durationS": 28800,
+  "seed": 42,
+  "baseline": {
+    "simTimeMs": 28800000,
+    "line": { "oee": 0.684, "availability": 0.912, "performance": 0.842, "quality": 0.891, "throughputPerHour": 128.6, "wip": 19, "good": 1029, "scrap": 37, "bottleneckAssetId": "ASSY-01" },
+    "assets": []
+  },
+  "scenario": {
+    "simTimeMs": 28800000,
+    "line": { "oee": 0.751, "availability": 0.931, "performance": 0.893, "quality": 0.903, "throughputPerHour": 147.1, "wip": 24, "good": 1177, "scrap": 41, "bottleneckAssetId": "CNC-01" },
+    "assets": []
+  },
+  "deltas": [
+    { "metric": "oee", "baseline": 0.684, "scenario": 0.751, "delta": 0.067, "deltaPct": 9.8 },
+    { "metric": "throughputPerHour", "baseline": 128.6, "scenario": 147.1, "delta": 18.5, "deltaPct": 14.39 },
+    { "metric": "good", "baseline": 1029, "scenario": 1177, "delta": 148, "deltaPct": 14.38 }
+  ],
+  "elapsedMs": 412
+}

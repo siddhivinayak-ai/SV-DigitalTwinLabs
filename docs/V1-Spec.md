@@ -64,7 +64,7 @@ Each sensor has the shape `{ id, assetId, kind, unit, value }`. Noise is Gaussia
 - **Fixed tick:** `dt = 0.1 s` of sim time. The real-time loop runs `speed` ticks' worth of sim time per 100 ms of wall time. Speed ranges from 0.25 to 100.
 - **RNG:** `System.Random(seed)`. The same seed and the same commands give identical results.
 - **Headless mode:** `RunFor(TimeSpan simTime)` runs as fast as possible and is used by what-if.
-- **Cloning:** `Clone()` deep-copies the full engine state, including the RNG state. This is done by re-seeding a derived RNG.
+- **What-if runs** build fresh engines from a plant model through `ISimulationEngineFactory`. They do not clone live state. Each run starts empty, so callers should allow for the warm-up period.
 
 ## 3. Analytics
 - **Availability** = (planned − fault − maintenance) / planned.
@@ -74,7 +74,7 @@ Each sensor has the shape `{ id, assetId, kind, unit, value }`. Noise is Gaussia
 - **Throughput** = good parts per hour over a rolling 1 h window. WIP is the number of parts inside the line.
 - **Bottleneck:** the asset with the highest active fraction (Running + Fault). When values are close, the tie-break is the lowest Blocked fraction.
 - **Anomaly:** an EWMA mean and variance per sensor (α=0.05). When |z| > 4 for at least 3 consecutive samples, it raises an alarm of severity `warning`. When |z| > 6, the severity is `critical`. There are also static limits from the plant JSON (`hiHi`, `hi`).
-- **What-if:** clone the live engine, or start fresh from the model, then run baseline and scenario (with overrides applied) for `durationS` each with the same seed. Return a KPI table and deltas.
+- **What-if:** take the base plant (the live engine's current params when `fromLive`, otherwise the original model). Build two fresh engines with the same seed: the baseline as-is and the scenario with overrides applied. Run each headless for `durationS` and return both KPI reports plus the deltas (`oee`, `availability`, `performance`, `quality`, `throughputPerHour`, `good`, `scrap`, `wip`).
 
 ## 4. UI design language
 - **Chrome:**
