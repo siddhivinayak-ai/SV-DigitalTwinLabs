@@ -22,5 +22,4 @@ COPY --from=api /app .
 ENV ASPNETCORE_URLS=http://+:8080 \
     DOTNET_CLI_TELEMETRY_OPTOUT=1
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8080/api/health || exit 1
 ENTRYPOINT ["dotnet", "TwinLabs.Api.dll"]
