@@ -12,4 +12,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Published builds find the plant at plant/sample_line.json next to the dll (see PlantLocator). -->
+    <None Include="..\..\..\contracts\plant\sample_line.json" Link="plant\sample_line.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="TwinLabs.Api.Tests" />
+  </ItemGroup>
+
 </Project>
