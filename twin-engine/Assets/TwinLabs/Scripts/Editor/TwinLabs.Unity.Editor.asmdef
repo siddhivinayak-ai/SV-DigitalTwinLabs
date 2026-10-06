@@ -1,0 +1,20 @@
+{
+    "name": "TwinLabs.Unity.Editor",
+    "rootNamespace": "TwinLabs.Unity.Editor",
+    "references": [
+        "TwinLabs.Unity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,14 @@
+# Unity (in addition to the repo-root .gitignore)
+.vscode/
+.vs/
+*.csproj
+*.sln
+*.slnx
+*.pidb
+*.userprefs
+*.unityproj
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/Assets/Plugins/Editor/JetBrains*
+crashlytics-build.properties
+sysinfo.txt
