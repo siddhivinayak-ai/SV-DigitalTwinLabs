@@ -37,13 +37,14 @@ export function windowIndices(t: ArrayLike<number>, now: number, seconds: number
   return [start, n];
 }
 
-/** Visible x-range of the window ending at `now`; 'all' spans the first sample to now. */
+/**
+ * Visible x-range of the window ending at `now`. 'All' spans the first sample to now; a rolling window
+ * longer than the recorded history starts at the first sample instead of showing empty negative time.
+ */
 export function windowRange(t: ArrayLike<number>, now: number, seconds: number): [number, number] {
-  if (!Number.isFinite(seconds)) {
-    const first = t.length ? t[0] : now;
-    return [first, Math.max(now, first + 1)];
-  }
-  return [now - seconds, now];
+  const first = t.length ? t[0] : now;
+  const lo = Number.isFinite(seconds) ? Math.max(now - seconds, Math.min(first, now)) : first;
+  return [lo, Math.max(now, lo + 1)];
 }
 
 /** Slice a columnar series to the rolling window (copies, never mutates the store's arrays). */

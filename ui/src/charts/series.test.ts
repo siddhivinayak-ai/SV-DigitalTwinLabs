@@ -40,6 +40,8 @@ describe('history window slicing', () => {
 
   it('computes the visible x-range', () => {
     expect(windowRange([0, 1], 100, 60)).toEqual([40, 100]);
+    expect(windowRange([10, 11], 30, 300)).toEqual([10, 30]); // history shorter than the window
+    expect(windowRange([], 0, 60)).toEqual([0, 1]);
     expect(windowRange([5, 6], 100, Infinity)).toEqual([5, 100]);
     expect(windowRange([], 0, Infinity)).toEqual([0, 1]);
     expect(windowSeconds('5m')).toBe(300);
