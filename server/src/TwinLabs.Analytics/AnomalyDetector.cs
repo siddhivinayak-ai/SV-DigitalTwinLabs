@@ -21,6 +21,10 @@ public sealed class AnomalyDetector(PlantModel plant) : IAnomalyDetector
     public const int AnomalyDebounceSamples = 3;
     public const double ZClear = 2;
     public const int AnomalyClearSamples = 10;
+    /// <summary>Off-delay (ISA-18.2): samples below the clear threshold before a limit alarm clears.</summary>
+    public const int LimitClearSamples = 10;
+    /// <summary>Samples an asset must have been Running before its sensors are judged for anomalies.</summary>
+    public const int SettleSamples = 30;
 
     private readonly Dictionary<string, SensorDef> _defs = BuildDefs(plant);
     private readonly Dictionary<string, LimitState> _limit = new(StringComparer.Ordinal);
@@ -49,15 +53,24 @@ public sealed class AnomalyDetector(PlantModel plant) : IAnomalyDetector
         foreach (var sv in sensors)
         {
             if (!_defs.TryGetValue(sv.Id, out var def) || !double.IsFinite(sv.V)) continue;
-            ObserveLimit(simTimeMs, def, sv.V, changes);
+            // Unknown asset state = assume Running.
+            var running = !stateById.TryGetValue(def.AssetId, out var st) || st == AssetStateKind.Running;
 
-            if (def.Kind is SensorKind.Count or SensorKind.Level) continue;
-            // Only learn/flag while the owning asset is Running (unknown asset state = assume Running).
-            if (stateById.TryGetValue(def.AssetId, out var st) && st != AssetStateKind.Running)
+            // Running-only signals (vibration, drive power/current, belt speed) drop to idle values whenever the
+            // asset stops; judging them then makes limit alarms chatter. Hold the limit state instead.
+            if (running || !IsRunningOnlySignal(def.Kind)) ObserveLimit(simTimeMs, def, sv.V, changes);
+
+            // Slow thermal signals are covered by hi/hiHi limits; EWMA would flag every load transition.
+            if (def.Kind is SensorKind.Count or SensorKind.Level or SensorKind.Temperature) continue;
+            if (!_ewma.TryGetValue(def.Id, out var e)) _ewma[def.Id] = e = new EwmaState();
+            if (!running)
             {
-                if (_ewma.TryGetValue(def.Id, out var e)) e.ResetCounters();
+                e.ResetCounters();
+                e.RunStreak = 0;
                 continue;
             }
+            // Let the signal settle after the asset (re)starts before judging it.
+            if (++e.RunStreak <= SettleSamples) continue;
             ObserveAnomaly(simTimeMs, def, sv.V, changes);
         }
 
@@ -96,9 +109,11 @@ public sealed class AnomalyDetector(PlantModel plant) : IAnomalyDetector
 
         if (_active.TryGetValue(id, out var cur))
         {
-            if (v < lowest * LimitClearFactor)
+            ls.Under = v < lowest * LimitClearFactor ? ls.Under + 1 : 0;
+            if (ls.Under >= LimitClearSamples)
             {
                 ls.Over = 0;
+                ls.Under = 0;
                 changes.Add(Clear(id, t));
             }
             else if (overHiHi && cur.Severity < Severity.Critical)
@@ -237,9 +252,13 @@ public sealed class AnomalyDetector(PlantModel plant) : IAnomalyDetector
         return d;
     }
 
+    private static bool IsRunningOnlySignal(SensorKind k) =>
+        k is SensorKind.Vibration or SensorKind.Power or SensorKind.Current or SensorKind.Speed;
+
     private sealed class LimitState
     {
         public int Over;
+        public int Under;
     }
 
     /// <summary>Exponentially weighted mean/variance (West/Finch incremental form).</summary>
@@ -250,6 +269,7 @@ public sealed class AnomalyDetector(PlantModel plant) : IAnomalyDetector
         public int N;
         public int Over;
         public int Calm;
+        public int RunStreak;
 
         public void Update(double x)
         {

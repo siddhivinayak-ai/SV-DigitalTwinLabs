@@ -108,6 +108,7 @@ public static class TestPlant
         [
             new SensorDef("M1.vib", "M1", SensorKind.Vibration, "mm/s", 0.04, Hi: 4.5, HiHi: 7.1),
             new SensorDef("M1.temp", "M1", SensorKind.Temperature, "°C", 0.005),
+            new SensorDef("M1.power", "M1", SensorKind.Power, "kW", 0.02),
             new SensorDef("R1.hot", "R1", SensorKind.Temperature, "°C", 0.005, HiHi: 65),
             new SensorDef("BUF.level", "BUF", SensorKind.Level, "pcs", 0, Hi: 9),
             new SensorDef("SNK.good", "SNK", SensorKind.Count, "pcs", 0),

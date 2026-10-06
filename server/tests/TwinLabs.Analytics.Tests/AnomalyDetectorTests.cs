@@ -84,6 +84,10 @@ public class AnomalyDetectorTests
         for (var i = 0; i < 3; i++) Feed("M1.vib", 5);
         Assert.Empty(Feed("M1.vib", 4.45)); // below hi but above hi*0.98 = 4.41
         Assert.Empty(Feed("M1.vib", 4.42));
+        // Off-delay: must stay below the clear threshold for LimitClearSamples in a row.
+        for (var i = 0; i < AnomalyDetector.LimitClearSamples - 1; i++) Assert.Empty(Feed("M1.vib", 4.40));
+        Assert.Empty(Feed("M1.vib", 4.6)); // back over: count restarts
+        for (var i = 0; i < AnomalyDetector.LimitClearSamples - 1; i++) Assert.Empty(Feed("M1.vib", 4.40));
         var cleared = Assert.Single(Feed("M1.vib", 4.40));
         Assert.False(cleared.Active);
         Assert.Equal(_t, cleared.ClearedAtMs);
@@ -103,6 +107,7 @@ public class AnomalyDetectorTests
         Assert.True(_d.Active.Single().Acknowledged);
         Assert.Null(_d.Acknowledge("nope"));
 
+        for (var i = 0; i < AnomalyDetector.LimitClearSamples - 1; i++) Feed("M1.vib", 1);
         var cleared = Assert.Single(Feed("M1.vib", 1));
         Assert.True(cleared.Acknowledged);
         Assert.Null(_d.Acknowledge("ALM-M1.vib-limit")); // no longer active
@@ -111,6 +116,18 @@ public class AnomalyDetectorTests
         var again = Assert.Single(Feed("M1.vib", 5));
         Assert.False(again.Acknowledged);
         Assert.Null(again.ClearedAtMs);
+    }
+
+    [Fact]
+    public void Limit_RunningOnlySignal_HeldWhileAssetStopped()
+    {
+        for (var i = 0; i < 3; i++) Feed("M1.vib", 5, AssetStateKind.Running);
+        Assert.Single(_d.Active);
+        // Vibration falls to idle level whenever the machine stops; that must not clear (or chatter) the alarm.
+        for (var i = 0; i < 50; i++) Assert.Empty(Feed("M1.vib", 0.1, AssetStateKind.Starved));
+        Assert.Single(_d.Active);
+        for (var i = 0; i < AnomalyDetector.LimitClearSamples - 1; i++) Assert.Empty(Feed("M1.vib", 1, AssetStateKind.Running));
+        Assert.False(Assert.Single(Feed("M1.vib", 1, AssetStateKind.Running)).Active);
     }
 
     [Fact]
@@ -140,8 +157,15 @@ public class AnomalyDetectorTests
 
     private static double Normal(int i) => 2.0 + (i % 2 == 0 ? 0.01 : -0.01) + (i % 7) * 0.001;
 
-    private Ewma WarmUp(int samples, string sensor = "M1.temp")
+    /// <summary>Samples the detector ignores after the asset starts Running (settle period).</summary>
+    private void Settle(string sensor = "M1.power")
     {
+        for (var i = 0; i < AnomalyDetector.SettleSamples; i++) Assert.Empty(Feed(sensor, 1000 + i, AssetStateKind.Running));
+    }
+
+    private Ewma WarmUp(int samples, string sensor = "M1.power")
+    {
+        Settle(sensor);
         var ewma = new Ewma();
         for (var i = 0; i < samples; i++)
         {
@@ -155,9 +179,10 @@ public class AnomalyDetectorTests
     [Fact]
     public void Anomaly_NoFlagsDuringWarmup()
     {
-        for (var i = 0; i < 49; i++) Assert.Empty(Feed("M1.temp", i < 10 ? 2.0 + i * 0.01 : 2.0, AssetStateKind.Running));
+        Settle();
+        for (var i = 0; i < 49; i++) Assert.Empty(Feed("M1.power", i < 10 ? 2.0 + i * 0.01 : 2.0, AssetStateKind.Running));
         // A big spike while still warming up (sample 50 is the last warm-up sample)…
-        Assert.Empty(Feed("M1.temp", 50, AssetStateKind.Running));
+        Assert.Empty(Feed("M1.power", 50, AssetStateKind.Running));
         Assert.Empty(_d.Active);
     }
 
@@ -167,25 +192,25 @@ public class AnomalyDetectorTests
         var ewma = WarmUp(200);
         var warn = ewma.At(5);
 
-        Assert.Empty(Feed("M1.temp", warn, AssetStateKind.Running));
-        Assert.Empty(Feed("M1.temp", warn, AssetStateKind.Running));
-        var raised = Assert.Single(Feed("M1.temp", warn, AssetStateKind.Running));
-        Assert.Equal("ALM-M1.temp-anomaly", raised.Id);
+        Assert.Empty(Feed("M1.power", warn, AssetStateKind.Running));
+        Assert.Empty(Feed("M1.power", warn, AssetStateKind.Running));
+        var raised = Assert.Single(Feed("M1.power", warn, AssetStateKind.Running));
+        Assert.Equal("ALM-M1.power-anomaly", raised.Id);
         Assert.Equal(AlarmSource.Anomaly, raised.Source);
         Assert.Equal(Severity.Warning, raised.Severity);
-        Assert.Equal("M1.temp", raised.SensorId);
+        Assert.Equal("M1.power", raised.SensorId);
         Assert.Equal(warn, raised.Value);
-        Assert.StartsWith("M1.temp ANOMALY z=+5.0", raised.Message);
+        Assert.StartsWith("M1.power ANOMALY z=+5.0", raised.Message);
 
         // The baseline is frozen while anomalous, so the replica stays valid.
-        var esc = Assert.Single(Feed("M1.temp", ewma.At(8), AssetStateKind.Running));
+        var esc = Assert.Single(Feed("M1.power", ewma.At(8), AssetStateKind.Running));
         Assert.Equal(Severity.Critical, esc.Severity);
 
         // 9 calm samples are not enough; a non-calm one restarts the count.
-        for (var i = 0; i < 9; i++) Assert.Empty(Feed("M1.temp", ewma.Mean, AssetStateKind.Running));
-        Assert.Empty(Feed("M1.temp", ewma.At(3), AssetStateKind.Running));
-        for (var i = 0; i < 9; i++) Assert.Empty(Feed("M1.temp", ewma.Mean, AssetStateKind.Running));
-        var cleared = Assert.Single(Feed("M1.temp", ewma.Mean, AssetStateKind.Running));
+        for (var i = 0; i < 9; i++) Assert.Empty(Feed("M1.power", ewma.Mean, AssetStateKind.Running));
+        Assert.Empty(Feed("M1.power", ewma.At(3), AssetStateKind.Running));
+        for (var i = 0; i < 9; i++) Assert.Empty(Feed("M1.power", ewma.Mean, AssetStateKind.Running));
+        var cleared = Assert.Single(Feed("M1.power", ewma.Mean, AssetStateKind.Running));
         Assert.False(cleared.Active);
         Assert.NotNull(cleared.ClearedAtMs);
         Assert.Empty(_d.Active);
@@ -195,19 +220,19 @@ public class AnomalyDetectorTests
     public void Anomaly_BigSpikeRaisesCriticalDirectly()
     {
         var ewma = WarmUp(100);
-        Feed("M1.temp", ewma.At(10), AssetStateKind.Running);
-        Feed("M1.temp", ewma.At(10), AssetStateKind.Running);
-        Assert.Equal(Severity.Critical, Assert.Single(Feed("M1.temp", ewma.At(10), AssetStateKind.Running)).Severity);
+        Feed("M1.power", ewma.At(10), AssetStateKind.Running);
+        Feed("M1.power", ewma.At(10), AssetStateKind.Running);
+        Assert.Equal(Severity.Critical, Assert.Single(Feed("M1.power", ewma.At(10), AssetStateKind.Running)).Severity);
     }
 
     [Fact]
     public void Anomaly_TwoSpikesThenNormal_DoesNotRaise()
     {
         var ewma = WarmUp(100);
-        Feed("M1.temp", ewma.At(5), AssetStateKind.Running);
-        Feed("M1.temp", ewma.At(5), AssetStateKind.Running);
-        Feed("M1.temp", ewma.Mean, AssetStateKind.Running);
-        Assert.Empty(Feed("M1.temp", ewma.At(5), AssetStateKind.Running));
+        Feed("M1.power", ewma.At(5), AssetStateKind.Running);
+        Feed("M1.power", ewma.At(5), AssetStateKind.Running);
+        Feed("M1.power", ewma.Mean, AssetStateKind.Running);
+        Assert.Empty(Feed("M1.power", ewma.At(5), AssetStateKind.Running));
         Assert.Empty(_d.Active);
     }
 
@@ -220,14 +245,32 @@ public class AnomalyDetectorTests
     {
         var ewma = WarmUp(100);
         for (var i = 0; i < 20; i++)
-            Assert.DoesNotContain(Feed("M1.temp", ewma.At(50), state), a => a.Source == AlarmSource.Anomaly);
+            Assert.DoesNotContain(Feed("M1.power", ewma.At(50), state), a => a.Source == AlarmSource.Anomaly);
 
         // Back to Running with normal values: still no anomaly, and the baseline wasn't polluted.
-        for (var i = 0; i < 5; i++)
-            Assert.DoesNotContain(Feed("M1.temp", ewma.Mean, AssetStateKind.Running), a => a.Source == AlarmSource.Anomaly);
-        Feed("M1.temp", ewma.At(5), AssetStateKind.Running);
-        Feed("M1.temp", ewma.At(5), AssetStateKind.Running);
-        Assert.Single(Feed("M1.temp", ewma.At(5), AssetStateKind.Running));
+        for (var i = 0; i < AnomalyDetector.SettleSamples + 5; i++)
+            Assert.DoesNotContain(Feed("M1.power", ewma.Mean, AssetStateKind.Running), a => a.Source == AlarmSource.Anomaly);
+        Feed("M1.power", ewma.At(5), AssetStateKind.Running);
+        Feed("M1.power", ewma.At(5), AssetStateKind.Running);
+        Assert.Single(Feed("M1.power", ewma.At(5), AssetStateKind.Running));
+    }
+
+    [Fact]
+    public void Anomaly_IgnoresSpikesDuringSettlePeriod()
+    {
+        WarmUp(100);
+        Feed("M1.power", 2.0, AssetStateKind.Starved);
+        for (var i = 0; i < AnomalyDetector.SettleSamples; i++)
+            Assert.Empty(Feed("M1.power", 50, AssetStateKind.Running)); // start-up transient
+        Assert.Empty(_d.Active);
+    }
+
+    [Fact]
+    public void Anomaly_SkipsTemperature()
+    {
+        Settle("M1.temp");
+        for (var i = 0; i < 100; i++) Feed("M1.temp", Normal(i), AssetStateKind.Running);
+        for (var i = 0; i < 5; i++) Assert.Empty(Feed("M1.temp", 500, AssetStateKind.Running));
     }
 
     [Fact]

@@ -20,13 +20,13 @@
       "id": "CNC-01", "name": "5-Axis CNC Mill #1", "kind": "machine",
       "position": { "x": 12, "y": 0, "z": -2.2 }, "rotationY": 0, "size": { "x": 3, "y": 2.4, "z": 2.2 },
       "downstream": ["BUF-01"],
-      "params": { "cycleTimeS": 50, "cycleTimeStdS": 3, "mtbfS": 7200, "mttrS": 600, "scrapRate": 0.02, "ratedKw": 18, "idleKw": 3, "ambientC": 24, "tempRiseC": 38, "vibBaselineMms": 1.2 }
+      "params": { "cycleTimeS": 50, "cycleTimeStdS": 3, "mtbfS": 21600, "mttrS": 420, "scrapRate": 0.02, "ratedKw": 18, "idleKw": 3, "ambientC": 24, "tempRiseC": 38, "vibBaselineMms": 1.2 }
     },
     {
       "id": "CNC-02", "name": "5-Axis CNC Mill #2", "kind": "machine",
       "position": { "x": 12, "y": 0, "z": 2.2 }, "rotationY": 0, "size": { "x": 3, "y": 2.4, "z": 2.2 },
       "downstream": ["BUF-01"],
-      "params": { "cycleTimeS": 50, "cycleTimeStdS": 3, "mtbfS": 7200, "mttrS": 600, "scrapRate": 0.02, "ratedKw": 18, "idleKw": 3, "ambientC": 24, "tempRiseC": 38, "vibBaselineMms": 1.2 }
+      "params": { "cycleTimeS": 50, "cycleTimeStdS": 3, "mtbfS": 21600, "mttrS": 420, "scrapRate": 0.02, "ratedKw": 18, "idleKw": 3, "ambientC": 24, "tempRiseC": 38, "vibBaselineMms": 1.2 }
     },
     {
       "id": "BUF-01", "name": "WIP Buffer", "kind": "buffer",
@@ -44,7 +44,7 @@
       "id": "ASSY-01", "name": "Press-Fit Assembly Cell", "kind": "machine",
       "position": { "x": 23.5, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 3, "y": 1.8, "z": 2 },
       "downstream": ["CONV-02"],
-      "params": { "cycleTimeS": 24, "cycleTimeStdS": 2, "mtbfS": 5400, "mttrS": 480, "scrapRate": 0.01, "ratedKw": 7, "idleKw": 1.2, "ambientC": 24, "tempRiseC": 22, "vibBaselineMms": 0.9 }
+      "params": { "cycleTimeS": 24, "cycleTimeStdS": 2, "mtbfS": 14400, "mttrS": 360, "scrapRate": 0.01, "ratedKw": 7, "idleKw": 1.2, "ambientC": 24, "tempRiseC": 22, "vibBaselineMms": 0.9 }
     },
     {
       "id": "CONV-02", "name": "Outfeed Conveyor", "kind": "conveyor",
