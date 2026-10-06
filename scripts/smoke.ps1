@@ -37,8 +37,8 @@ Check 'what-if'     { $w = Api POST '/whatif' @{ durationS = 14400; overrides = 
 Check 'csv'         { $r = Invoke-WebRequest "$Base/api/export/csv?seconds=60" -UseBasicParsing; $first = ($r.Content -split "`n")[0]; if (-not $first.StartsWith('simTimeMs')) { throw $first }; "$(($r.Content -split "`n").Count) lines" }
 Check 'websocket'   {
   $ws = [System.Net.WebSockets.ClientWebSocket]::new()
-  $uri = [Uri]($Base -replace '^http', 'ws') ; $uri = [Uri]"$uri/ws"
-  $ws.ConnectAsync($uri, [Threading.CancellationToken]::None).Wait(5000) | Out-Null
+  $uri = [Uri](($Base.TrimEnd('/') -replace '^http', 'ws') + '/ws')
+  if (-not $ws.ConnectAsync($uri, [Threading.CancellationToken]::None).Wait(5000)) { throw "connect timeout $uri" }
   $types = @{}
   $buf = [byte[]]::new(1MB)
   $deadline = (Get-Date).AddSeconds(4)
