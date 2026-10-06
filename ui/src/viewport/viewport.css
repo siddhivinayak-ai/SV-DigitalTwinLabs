@@ -1,0 +1,108 @@
+/* 3D viewport overlays: classic HUD toolbar, labels, tooltip, readouts. Uses tokens.css variables. */
+.vp {
+  --vp-tip-bg: #ffffe1;
+  --vp-tip-fg: #000000;
+  --vp-tip-bd: #000000;
+  --vp-glass: rgba(236, 233, 216, 0.88);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font: var(--fs) var(--font-ui);
+  color: var(--c-text);
+  user-select: none;
+  -webkit-user-select: none;
+}
+:root[data-theme="dark"] .vp {
+  --vp-tip-bg: #2b2d31;
+  --vp-tip-fg: #d4d4d4;
+  --vp-tip-bd: #6b6f75;
+  --vp-glass: rgba(43, 45, 49, 0.88);
+}
+.vp-canvas { position: absolute; inset: 0; display: block; outline: none; touch-action: none; }
+.vp-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+
+.vp-lbl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px 0 3px;
+  height: 14px;
+  font: 10px/14px var(--font-mono);
+  color: var(--c-text);
+  background: var(--vp-glass);
+  border: 1px solid var(--c-border);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.vp-lbl.sel { background: var(--c-select); border-color: var(--c-select); color: #fff; }
+.vp-lbl-dot { width: 7px; height: 7px; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45); background: var(--s-idle); }
+
+.vp-hud {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  background: var(--c-face);
+  border: 1px solid;
+  border-color: var(--c-hilite) var(--c-dark) var(--c-dark) var(--c-hilite);
+  box-shadow: inset -1px -1px 0 var(--c-shadow), 1px 1px 0 rgba(0, 0, 0, 0.18);
+}
+.vp-btn {
+  height: 20px;
+  min-width: 34px;
+  padding: 0 7px;
+  font: var(--fs) var(--font-ui);
+  color: var(--c-text);
+  background: var(--c-face);
+  border: 1px solid transparent;
+  border-radius: 0;
+  cursor: default;
+}
+.vp-btn:hover { border-color: var(--c-hilite) var(--c-shadow) var(--c-shadow) var(--c-hilite); }
+.vp-btn:active,
+.vp-btn[aria-pressed="true"] {
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+  box-shadow: inset 1px 1px 0 var(--c-dark);
+  background: var(--c-panel);
+}
+.vp-btn[aria-pressed="true"] { padding-top: 1px; }
+.vp-btn:focus-visible { outline: 1px dotted var(--c-text); outline-offset: -4px; }
+.vp-sep { width: 0; height: 18px; margin: 0 3px; border-left: 1px solid var(--c-shadow); border-right: 1px solid var(--c-hilite); }
+
+.vp-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 176px;
+  padding: 3px 6px 4px;
+  color: var(--vp-tip-fg);
+  background: var(--vp-tip-bg);
+  border: 1px solid var(--vp-tip-bd);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  z-index: 3;
+}
+.vp-tip-h { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); }
+.vp-tip-h span { color: var(--c-text-dim); text-transform: uppercase; font-size: var(--fs-small); }
+.vp-tip-n { margin-bottom: 3px; }
+.vp-tip-s { display: flex; align-items: center; gap: 5px; padding: 2px 0; border-top: 1px solid rgba(128, 128, 128, 0.35); }
+.vp-tip-s i { width: 9px; height: 9px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45); }
+.vp-tip-s .num { margin-left: auto; color: var(--c-text-dim); }
+.vp-tip-g { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 0 8px; font-size: var(--fs-small); color: var(--c-text-dim); }
+.vp-tip-g b { font-weight: normal; color: var(--vp-tip-fg); }
+
+.vp-coord {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 0 4px;
+  font: 10px/14px var(--font-mono);
+  white-space: pre;
+  color: var(--c-text);
+  background: var(--vp-glass);
+  pointer-events: none;
+}
+.vp-coord:empty { display: none; }

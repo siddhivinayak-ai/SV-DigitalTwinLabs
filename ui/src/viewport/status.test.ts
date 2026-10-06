@@ -44,6 +44,6 @@ describe('state → colour (ISA-101)', () => {
   });
 
   it('flags abnormal states for the status outline', () => {
-    expect(ASSET_STATES.filter(isAbnormal)).toEqual(['starved', 'blocked', 'fault', 'maintenance']);
+    expect(ASSET_STATES.filter(isAbnormal)).toEqual(['blocked', 'fault', 'maintenance']);
   });
 });

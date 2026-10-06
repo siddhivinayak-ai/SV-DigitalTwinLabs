@@ -8,7 +8,7 @@ export type ViewPreset = 'iso' | 'top' | 'front' | 'fit';
 /** Unit direction from the target towards the camera for each preset. */
 export function presetDirection(p: Exclude<ViewPreset, 'fit'>): Vec3 {
   switch (p) {
-    case 'iso': return normalize({ x: -0.55, y: 0.8, z: 1 });
+    case 'iso': return normalize({ x: -0.32, y: 0.62, z: 1 });
     case 'top': return normalize({ x: 0, y: 1, z: 0.0015 });
     case 'front': return normalize({ x: 0, y: 0.12, z: 1 });
   }

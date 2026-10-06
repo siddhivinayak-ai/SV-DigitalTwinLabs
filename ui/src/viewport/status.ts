@@ -48,7 +48,10 @@ export function lensOn(state: AssetStateKind | undefined, tSec: number): boolean
   return Math.floor(tSec * 4) % 2 === 0;
 }
 
-/** Abnormal states get the emissive status outline; Running/Idle/Off stay quiet (ISA-101). */
+/**
+ * States that also get the emissive status outline. Running/Idle/Off stay quiet (ISA-101); Starved is
+ * shown on the beacon only, since it is the normal waiting state of most stations on a balanced line.
+ */
 export function isAbnormal(state: AssetStateKind | undefined): boolean {
-  return state === 'starved' || state === 'blocked' || state === 'fault' || state === 'maintenance';
+  return state === 'blocked' || state === 'fault' || state === 'maintenance';
 }

@@ -8,7 +8,7 @@ import type { AssetDef, Vec3 } from '../net/contracts';
 import { ROBOT, robotPose, solveArm, toolPoint, type ToolPose } from './robot';
 
 /** A machined housing: the moving part. */
-export const PART = { x: 0.3, y: 0.18, z: 0.24 } as const;
+export const PART = { x: 0.34, y: 0.2, z: 0.26 } as const;
 
 export const CONVEYOR = { endMargin: 0.22, beltThk: 0.04 } as const;
 export const INSPECTION = { tableH: 0.86, travel: 0.6 } as const;
