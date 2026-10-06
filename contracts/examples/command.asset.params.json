@@ -1,0 +1,6 @@
+{
+  "type": "command",
+  "t": 0,
+  "seq": 7,
+  "data": { "id": "c-0007", "action": "asset.params", "assetId": "BUF-01", "params": { "capacity": 30 } }
+}

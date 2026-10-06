@@ -1,0 +1,6 @@
+{
+  "type": "command",
+  "t": 0,
+  "seq": 5,
+  "data": { "id": "c-0005", "action": "sim.speed", "value": 10 }
+}

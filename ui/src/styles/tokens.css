@@ -1,0 +1,106 @@
+/* Design tokens — the shared visual vocabulary (docs/V1-Spec.md §4).
+   Every component uses these variables; never hard-code chrome colours. */
+:root {
+  /* chrome */
+  --c-face: #d4d0c8;          /* control face */
+  --c-panel: #ece9d8;         /* pane background */
+  --c-window: #f5f4ee;        /* app background */
+  --c-field: #ffffff;         /* inputs, grids, tree */
+  --c-field-alt: #f3f3f3;     /* zebra rows */
+  --c-text: #000000;
+  --c-text-dim: #5a5a5a;
+  --c-text-disabled: #a0a0a0;
+  --c-hilite: #ffffff;        /* bevel light */
+  --c-shadow: #808080;        /* bevel shadow */
+  --c-dark: #404040;          /* bevel dark */
+  --c-border: #a0a0a0;
+  --c-title-a: #0a246a;       /* docked pane title gradient */
+  --c-title-b: #3a6ea5;
+  --c-title-text: #ffffff;
+  --c-title-inactive-a: #808080;
+  --c-title-inactive-b: #b5b5b5;
+  --c-select: #0f62fe;        /* IBM blue — selection / focus */
+  --c-select-text: #ffffff;
+  --c-select-soft: #d0e2ff;
+  --c-accent: #76b900;        /* NVIDIA green */
+  --c-menu-hover: #316ac5;
+
+  /* ISA-101 status: grey = normal, colour = abnormal/active */
+  --s-off: #a0a0a0;
+  --s-idle: #a0a0a0;
+  --s-running: #76b900;
+  --s-starved: #e8a317;
+  --s-blocked: #e8a317;
+  --s-fault: #d0021b;
+  --s-maintenance: #4a90d9;
+  --sev-info: #5a5a5a;
+  --sev-warning: #e8a317;
+  --sev-critical: #d0021b;
+
+  /* MATLAB plot colour order + axes */
+  --plot-1: #0072bd;
+  --plot-2: #d95319;
+  --plot-3: #edb120;
+  --plot-4: #7e2f8e;
+  --plot-5: #77ac30;
+  --plot-6: #4dbeee;
+  --plot-7: #a2142f;
+  --plot-bg: #ffffff;
+  --plot-grid: #e5e5e5;
+  --plot-axis: #262626;
+  --plot-frame: #000000;
+
+  /* 3D viewport */
+  --vp-bg: #c8ccd2;
+  --vp-floor: #9da3ab;
+  --vp-grid: #7c838c;
+
+  /* type & metrics */
+  --font-ui: Tahoma, "Segoe UI", Verdana, sans-serif;
+  --font-mono: Consolas, "Courier New", monospace;
+  --fs: 11px;
+  --fs-small: 10px;
+  --row-h: 18px;
+  --btn-h: 22px;
+  --title-h: 18px;
+  --radius: 2px;
+  --splitter: 4px;
+}
+
+:root[data-theme="dark"] {
+  --c-face: #3c3f44;
+  --c-panel: #2b2d31;
+  --c-window: #1e1f22;
+  --c-field: #1b1c1f;
+  --c-field-alt: #232428;
+  --c-text: #d4d4d4;
+  --c-text-dim: #9a9a9a;
+  --c-text-disabled: #5e5e5e;
+  --c-hilite: #55595f;
+  --c-shadow: #18191b;
+  --c-dark: #0d0d0e;
+  --c-border: #4a4d52;
+  --c-title-a: #111111;
+  --c-title-b: #1f2a14;
+  --c-title-text: #76b900;
+  --c-title-inactive-a: #1a1a1a;
+  --c-title-inactive-b: #2a2a2a;
+  --c-select: #0f62fe;
+  --c-select-soft: #1c3a6b;
+  --c-menu-hover: #0f62fe;
+  --s-off: #6b6b6b;
+  --s-idle: #6b6b6b;
+  --sev-info: #9a9a9a;
+  --plot-bg: #111214;
+  --plot-grid: #2c2e33;
+  --plot-axis: #c8c8c8;
+  --plot-frame: #8a8a8a;
+  --vp-bg: #15171a;
+  --vp-floor: #24272b;
+  --vp-grid: #3a3e44;
+}
+
+/** Bevel helpers usable by any component. */
+.bevel-out { border: 1px solid; border-color: var(--c-hilite) var(--c-dark) var(--c-dark) var(--c-hilite); box-shadow: inset -1px -1px 0 var(--c-shadow); }
+.bevel-in  { border: 1px solid; border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow); box-shadow: inset 1px 1px 0 var(--c-dark); }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }

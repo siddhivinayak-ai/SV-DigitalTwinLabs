@@ -1,0 +1,9 @@
+{
+  "durationS": 28800,
+  "overrides": [
+    { "assetId": "BUF-01", "params": { "capacity": 30 } },
+    { "assetId": "ASSY-01", "params": { "cycleTimeS": 21 } }
+  ],
+  "seed": 42,
+  "fromLive": true
+}
