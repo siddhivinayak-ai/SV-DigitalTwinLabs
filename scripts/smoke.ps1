@@ -13,9 +13,9 @@ function Check([string]$name, [scriptblock]$test) {
   catch { $script:failures++; Write-Host ("  FAIL  {0}: {1}" -f $name, $_.Exception.Message) -ForegroundColor Red }
 }
 function Api([string]$method, [string]$path, $body) {
-  $args = @{ Method = $method; Uri = "$Base/api$path"; ContentType = 'application/json' }
-  if ($null -ne $body) { $args.Body = ($body | ConvertTo-Json -Depth 8 -Compress) }
-  Invoke-RestMethod @args
+  $req = @{ Method = $method; Uri = "$Base/api$path"; ContentType = 'application/json' }
+  if ($null -ne $body) { $req.Body = ($body | ConvertTo-Json -Depth 8 -Compress) }
+  Invoke-RestMethod @req
 }
 
 Write-Host "TwinLabs smoke test -> $Base"
