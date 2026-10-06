@@ -268,7 +268,7 @@ public class SimulationEngineTests(ITestOutputHelper output)
     public void Maintenance_stops_flow_through_the_asset()
     {
         var e = NewEngine();
-        NoRandomFaults(e, "CNC-01", "CNC-02");
+        NoRandomFaults(e, "CNC-01", "CNC-02", "ROB-01", "ASSY-01", "QC-01", "PACK-01"); // isolate the effect of maintenance
         e.Advance(TimeSpan.FromMinutes(30));
         e.SetMaintenance("CNC-01", true);
         e.SetMaintenance("CNC-02", true);

@@ -73,7 +73,11 @@ Each sensor has the shape `{ id, assetId, kind, unit, value }`. Noise is Gaussia
 - **OEE** = A × P × Q, computed per machine-type asset. Line OEE uses the bottleneck's A×P with the line's overall Q.
 - **Throughput** = good parts per hour over a rolling 1 h window. WIP is the number of parts inside the line.
 - **Bottleneck:** the asset with the highest active fraction (Running + Fault). When values are close, the tie-break is the lowest Blocked fraction.
-- **Anomaly:** an EWMA mean and variance per sensor (α=0.05). When |z| > 4 for at least 3 consecutive samples, it raises an alarm of severity `warning`. When |z| > 6, the severity is `critical`. There are also static limits from the plant JSON (`hiHi`, `hi`).
+- **Alarms (ISA-18.2 style, so operators aren't flooded):**
+  - **Limit (`hi`/`hiHi`):** on-delay of 3 samples, off-delay of 10 samples below `hi×0.98`. Running-only signals (vibration, power, current, speed) are held while their asset is stopped, so idle values never clear or re-trigger an alarm.
+  - **Anomaly:** an EWMA mean and variance (α=0.05) for vibration, power, current and speed; temperature is limit-only. Sensors are judged only while the asset is Running, after a 30-sample settle period and a 50-sample warm-up. |z| > 4 for 3 samples is a `warning` and |z| > 6 is `critical`. It clears after 10 samples with |z| < 2.
+  - **Fault:** a `critical` alarm is active while the asset is in Fault.
+  - **Target:** fewer than 6 alarm raises per hour on the sample line. Measured: about 36 per 8 h.
 - **What-if:** take the base plant (the live engine's current params when `fromLive`, otherwise the original model). Build two fresh engines with the same seed: the baseline as-is and the scenario with overrides applied. Run each headless for `durationS` and return both KPI reports plus the deltas (`oee`, `availability`, `performance`, `quality`, `throughputPerHour`, `good`, `scrap`, `wip`).
 
 ## 4. UI design language
