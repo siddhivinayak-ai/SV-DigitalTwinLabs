@@ -1,0 +1,102 @@
+/* Base document styles: reset, typography, focus rectangles, classic scrollbars.
+   All colours come from tokens.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-window);
+  color: var(--c-text);
+  font: var(--fs)/1.3 var(--font-ui);
+  -webkit-font-smoothing: auto;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+  color-scheme: light;
+}
+:root[data-theme="dark"] body { color-scheme: dark; }
+
+#app { position: fixed; inset: 0; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+::selection { background: var(--c-select); color: var(--c-select-text); }
+
+/* Classic dotted focus rectangle, drawn inside the control. */
+:focus { outline: none; }
+.focus-rect:focus-visible,
+.btn:focus-visible::after {
+  outline: 1px dotted var(--c-text);
+  outline-offset: -4px;
+}
+
+.mono, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.num { text-align: right; }
+.dim { color: var(--c-text-dim); }
+.hidden { display: none !important; }
+
+/* ---------- Scrollbars (Chromium) ---------- */
+::-webkit-scrollbar { width: 16px; height: 16px; }
+::-webkit-scrollbar-track {
+  background-color: var(--c-panel);
+  background-image:
+    linear-gradient(45deg, var(--c-face) 25%, transparent 25%, transparent 75%, var(--c-face) 75%),
+    linear-gradient(45deg, var(--c-face) 25%, transparent 25%, transparent 75%, var(--c-face) 75%);
+  background-size: 2px 2px;
+  background-position: 0 0, 1px 1px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-face);
+  border: 1px solid;
+  border-color: var(--c-face) var(--c-dark) var(--c-dark) var(--c-face);
+  box-shadow: inset 1px 1px 0 var(--c-hilite), inset -1px -1px 0 var(--c-shadow);
+}
+::-webkit-scrollbar-corner { background: var(--c-face); }
+::-webkit-scrollbar-button:single-button {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--c-face);
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 1px solid;
+  border-color: var(--c-face) var(--c-dark) var(--c-dark) var(--c-face);
+  box-shadow: inset 1px 1px 0 var(--c-hilite), inset -1px -1px 0 var(--c-shadow);
+}
+::-webkit-scrollbar-button:single-button:active {
+  border-color: var(--c-shadow);
+  box-shadow: none;
+}
+/* Arrow glyphs: data-URI SVGs (glyph ink only; chrome colours stay tokenised). */
+::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M3 0h1v1h1v1h1v1h1v1H0V3h1V2h1V1h1z' fill='%23000'/%3E%3C/svg%3E"); }
+::-webkit-scrollbar-button:single-button:vertical:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M0 0h7v1H6v1H5v1H4v1H3V3H2V2H1V1H0z' fill='%23000'/%3E%3C/svg%3E"); }
+::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='7'%3E%3Cpath d='M3 0h1v7H3V6H2V5H1V4H0V3h1V2h1V1h1z' fill='%23000'/%3E%3C/svg%3E"); }
+::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='7'%3E%3Cpath d='M0 0h1v1h1v1h1v1h1v1H3v1H2v1H1v1H0z' fill='%23000'/%3E%3C/svg%3E"); }
+:root[data-theme="dark"] ::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M3 0h1v1h1v1h1v1h1v1H0V3h1V2h1V1h1z' fill='%23d4d4d4'/%3E%3C/svg%3E"); }
+:root[data-theme="dark"] ::-webkit-scrollbar-button:single-button:vertical:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='4'%3E%3Cpath d='M0 0h7v1H6v1H5v1H4v1H3V3H2V2H1V1H0z' fill='%23d4d4d4'/%3E%3C/svg%3E"); }
+:root[data-theme="dark"] ::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='7'%3E%3Cpath d='M3 0h1v7H3V6H2V5H1V4H0V3h1V2h1V1h1z' fill='%23d4d4d4'/%3E%3C/svg%3E"); }
+:root[data-theme="dark"] ::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='7'%3E%3Cpath d='M0 0h1v1h1v1h1v1h1v1H3v1H2v1H1v1H0z' fill='%23d4d4d4'/%3E%3C/svg%3E"); }
+
+/* ---------- Status colours shared by LEDs, text and chips ---------- */
+.st-off { --st: var(--s-off); }
+.st-idle { --st: var(--s-idle); }
+.st-running { --st: var(--s-running); }
+.st-starved { --st: var(--s-starved); }
+.st-blocked { --st: var(--s-blocked); }
+.st-fault { --st: var(--s-fault); }
+.st-maintenance { --st: var(--s-maintenance); }
+
+.sev-info { --sev: var(--sev-info); }
+.sev-warning { --sev: var(--sev-warning); }
+.sev-critical { --sev: var(--sev-critical); }
+
+/* Value beyond hi (amber) / hiHi (red): ISA-101 abnormal colouring. */
+.val-hi { color: var(--c-text); background: color-mix(in srgb, var(--sev-warning) 35%, transparent); }
+.val-hihi { color: var(--c-select-text); background: var(--sev-critical); }
+
+@keyframes blink-bg { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.25; } }
+@keyframes blink-led { 0%, 49% { background: var(--st, var(--s-off)); } 50%, 100% { background: var(--c-face); } }
+@keyframes blink-sev { 0%, 49% { } 50%, 100% { background: var(--c-face); color: var(--c-text); border-color: var(--c-shadow); } }
+@keyframes marquee { from { transform: translateX(-100%); } to { transform: translateX(400%); } }
