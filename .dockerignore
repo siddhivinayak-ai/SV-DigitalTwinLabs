@@ -1,0 +1,9 @@
+**/bin
+**/obj
+**/node_modules
+**/dist
+server/src/TwinLabs.Api/wwwroot
+twin-engine
+_refs
+.git
+.vs
