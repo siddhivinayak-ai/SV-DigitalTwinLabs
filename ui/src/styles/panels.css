@@ -1,0 +1,17 @@
+/* Panel-internal layout shared by the shell-owned panels. */
+.panel-col { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--c-panel); }
+.panel-fill { position: relative; flex: 1; min-height: 0; }
+
+/* Properties */
+.props { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--c-face); }
+.props-top { flex: none; padding: 3px 3px 3px; }
+.props-top .combo { width: 100%; }
+.props-grid {
+  position: relative; flex: 1; min-height: 0;
+  margin: 0 3px;
+  border: 1px solid;
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+}
+.props-grid > div { inset: 1px; }
+.props-actions { flex: none; display: flex; gap: 3px; padding: 4px 3px 3px; flex-wrap: wrap; }
+.props-actions .btn { flex: 1 1 auto; }

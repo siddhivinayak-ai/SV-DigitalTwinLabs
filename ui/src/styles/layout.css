@@ -1,0 +1,193 @@
+/* Shell layout: menu bar, tool strip, dock panes, splitters, status bar. */
+
+.shell {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-face);
+}
+
+/* ---------- Menu bar ---------- */
+.menubar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 2px;
+  background: var(--c-face);
+  border-bottom: 1px solid var(--c-shadow);
+  box-shadow: 0 1px 0 var(--c-hilite);
+}
+.menubar-item {
+  height: 18px;
+  line-height: 16px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  cursor: default;
+}
+.menubar-item.hot { border-color: var(--c-hilite) var(--c-shadow) var(--c-shadow) var(--c-hilite); }
+.menubar-item.open, .menubar.kbd .menubar-item.hot {
+  background: var(--c-menu-hover);
+  color: var(--c-select-text);
+  border-color: transparent;
+}
+.menubar .brand {
+  margin-left: auto;
+  padding: 0 6px;
+  color: var(--c-text-dim);
+  font-size: var(--fs-small);
+  letter-spacing: 0.3px;
+}
+.menubar .brand b { color: var(--c-text); font-weight: bold; }
+
+/* ---------- Tool strip ---------- */
+.toolstrip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: 28px;
+  padding: 0 3px 0 2px;
+  background: var(--c-face);
+  border-top: 1px solid var(--c-hilite);
+  border-bottom: 1px solid var(--c-shadow);
+}
+.toolstrip .grip {
+  width: 3px; height: 20px; margin: 0 4px 0 2px;
+  border: 1px solid; border-color: var(--c-hilite) var(--c-shadow) var(--c-shadow) var(--c-hilite);
+}
+.toolstrip .sep { width: 2px; height: 20px; margin: 0 4px; border-left: 1px solid var(--c-shadow); border-right: 1px solid var(--c-hilite); }
+.toolstrip .label { padding: 0 4px 0 2px; }
+.toolstrip .grow { flex: 1; }
+.tool-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  min-width: 23px;
+  height: 22px;
+  padding: 0 3px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--c-text);
+  white-space: nowrap;
+  cursor: default;
+}
+.tool-btn svg { width: 16px; height: 16px; flex: none; }
+.tool-btn:hover:not(:disabled) { border-color: var(--c-hilite) var(--c-shadow) var(--c-shadow) var(--c-hilite); }
+.tool-btn:active:not(:disabled), .tool-btn.checked {
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+}
+.tool-btn.checked { background-color: var(--c-panel); }
+.tool-btn.checked:hover { background-color: var(--c-panel); }
+.tool-btn:active:not(:disabled) svg { transform: translate(1px, 1px); }
+.tool-btn:focus-visible { outline: 1px dotted var(--c-text); outline-offset: -3px; }
+.tool-btn:disabled { color: var(--c-text-disabled); }
+.tool-btn:disabled svg { opacity: 0.35; filter: grayscale(1); }
+.tool-btn .tb-text { padding: 0 2px; }
+
+/* ---------- Dock area ---------- */
+.dock { flex: 1; min-height: 0; display: flex; padding: 3px 3px 2px; gap: 0; }
+.dock-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.dock-col.grow { flex: 1; }
+.dock-row { display: flex; min-width: 0; min-height: 0; }
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--c-face);
+  border: 1px solid;
+  border-color: var(--c-face) var(--c-dark) var(--c-dark) var(--c-face);
+  box-shadow: inset 1px 1px 0 var(--c-hilite), inset -1px -1px 0 var(--c-shadow);
+  padding: 2px;
+}
+.pane.grow { flex: 1; }
+.pane-title {
+  flex: none;
+  display: flex; align-items: center; gap: 4px;
+  height: var(--title-h);
+  padding: 0 2px 0 4px;
+  background: linear-gradient(90deg, var(--c-title-inactive-a), var(--c-title-inactive-b));
+  color: var(--c-title-text);
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+}
+:root[data-theme="dark"] .pane:not(.active) .pane-title { color: var(--c-text-dim); }
+.pane.active .pane-title { background: linear-gradient(90deg, var(--c-title-a), var(--c-title-b)); }
+.pane-title .pt-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.pane-title .pt-sub { font-weight: normal; opacity: 0.85; }
+.pane-title svg.pt-icon { width: 14px; height: 14px; flex: none; }
+.pane-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  margin-top: 2px;
+  background: var(--c-panel);
+  border: 1px solid;
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+  overflow: hidden;
+}
+.pane-host { position: absolute; inset: 0; overflow: hidden; }
+.pane.tabbed .pane-body { display: flex; flex-direction: column; background: var(--c-face); border: 0; margin-top: 2px; }
+.pane.tabbed .tabstrip-pages {
+  background: var(--c-panel);
+  border: 1px solid;
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-dark) var(--c-shadow);
+}
+/* Tabs on the bottom edge (VS-2005 style tool window). */
+.pane.tabbed .tabstrip { flex-direction: column-reverse; }
+
+/* ---------- Splitters ---------- */
+.splitter { flex: none; background: var(--c-face); position: relative; z-index: 5; }
+.splitter.v { width: var(--splitter); cursor: col-resize; }
+.splitter.h { height: var(--splitter); cursor: row-resize; }
+.splitter.dragging, .splitter:hover { background: var(--c-shadow); }
+body.resizing-col, body.resizing-col * { cursor: col-resize !important; }
+body.resizing-row, body.resizing-row * { cursor: row-resize !important; }
+
+/* ---------- Status bar ---------- */
+.statusbar {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 22px;
+  padding: 2px 2px 2px;
+  background: var(--c-face);
+  border-top: 1px solid var(--c-hilite);
+}
+.sb-seg {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 6px;
+  border: 1px solid;
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sb-seg.grow { flex: 1; min-width: 0; }
+.sb-seg .sb-label { color: var(--c-text-dim); }
+.sb-seg .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.sb-seg.conn .conn-text { font-weight: bold; letter-spacing: 0.3px; }
+.sb-seg.alarms.sev-warning { background: var(--sev-warning); color: #000; }
+.sb-seg.alarms.sev-critical { background: var(--sev-critical); color: var(--c-select-text); }
+.sb-seg.alarms.sev-critical .sb-label, .sb-seg.alarms.sev-warning .sb-label { color: inherit; }
+.sb-seg.alarms.blink { animation: blink-sev 1s steps(1) infinite; }
+.sb-seg.msg.error { color: var(--sev-critical); }
+.sb-grip {
+  width: 14px;
+  background:
+    linear-gradient(135deg, transparent 0 55%, var(--c-shadow) 55% 62%, var(--c-hilite) 62% 69%, transparent 69% 72%, var(--c-shadow) 72% 79%, var(--c-hilite) 79% 86%, transparent 86%);
+}
+
+/* ---------- Non-blocking info banner (WinForms InfoBar look) ---------- */
+.infobar {
+  flex: none;
+  display: flex; align-items: center; gap: 8px;
+  height: 26px;
+  padding: 0 6px;
+  background: color-mix(in srgb, var(--sev-warning) 22%, var(--c-field));
+  border-bottom: 1px solid var(--c-shadow);
+}
+.infobar svg { width: 16px; height: 16px; flex: none; }
+.infobar .ib-text { flex: 1; }
