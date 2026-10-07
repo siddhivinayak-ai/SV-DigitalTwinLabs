@@ -53,7 +53,7 @@
 .wi-summary b { color: var(--c-text); font-weight: normal; font-family: var(--font-mono); }
 .wi-error { color: var(--sev-critical); padding: 6px 2px; }
 
-.about { display: flex; gap: 14px; padding: 4px 6px; width: 400px; }
+.about { display: flex; gap: 14px; padding: 4px 6px; width: 460px; }
 .about .logo {
   flex: none; width: 56px; height: 56px;
   display: flex; align-items: center; justify-content: center;
@@ -69,7 +69,7 @@
 .about .kv span:nth-child(odd) { color: var(--c-text-dim); }
 .about .kv span:nth-child(even) { font-family: var(--font-mono); }
 .about .sunken {
-  margin-top: 6px; padding: 4px 6px; height: 64px; overflow: auto;
+  margin-top: 6px; padding: 4px 6px; overflow: auto;
   background: var(--c-field);
   border: 1px solid; border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
   font-size: var(--fs-small);

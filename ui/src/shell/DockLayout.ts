@@ -120,6 +120,7 @@ export class DockLayout {
     });
     this.apply();
     this.setActive('center');
+    window.addEventListener('resize', () => this.apply());
   }
 
   /** Mount every panel. Call once, after the dock element is attached to the document. */
@@ -228,21 +229,35 @@ export class DockLayout {
     const v = this.state.visible;
     const s = this.state.sizes;
     const show = (el: HTMLElement, on: boolean) => { el.style.display = on ? '' : 'none'; };
+    // Effective sizes: persisted sizes, squeezed so the centre and upper panes keep a usable minimum.
+    const W = this.el.clientWidth, H = this.el.clientHeight;
+    const rv0 = v.rightTop || v.rightBottom;
+    let right = s.right, left = s.left;
+    if (W > 0) {
+      const avail = W - 12 - MIN.centerW;
+      if ((v.left ? left : 0) + (rv0 ? right : 0) > avail) {
+        const scale = avail / ((v.left ? left : 0) + (rv0 ? right : 0));
+        left = Math.max(MIN.left, Math.floor(left * scale));
+        right = Math.max(MIN.right, Math.floor(right * scale));
+      }
+    }
+    const bottomH = H > 0 ? Math.max(MIN.bottom, Math.min(s.bottom, H - 8 - MIN.centerH)) : s.bottom;
+    const rbH = H > 0 ? Math.max(MIN.rightBottom, Math.min(s.rightBottom, H - 8 - MIN.rightTopH)) : s.rightBottom;
     show(this.leftEl, v.left);
     show(this.splitL, v.left);
-    this.leftEl.style.width = `${s.left}px`;
+    this.leftEl.style.width = `${left}px`;
     this.leftEl.style.flex = 'none';
 
     const bottom = this.panes.get('bottom')!.el;
     show(bottom, v.bottom);
     show(this.splitB, v.bottom);
-    bottom.style.height = `${s.bottom}px`;
+    bottom.style.height = `${bottomH}px`;
     bottom.style.flex = 'none';
 
     const rv = this.rightVisible();
     show(this.rightCol, rv);
     show(this.splitR, rv);
-    this.rightCol.style.width = `${s.right}px`;
+    this.rightCol.style.width = `${right}px`;
     this.rightCol.style.flex = 'none';
     const rt = this.panes.get('rightTop')!.el;
     const rb = this.panes.get('rightBottom')!.el;
@@ -250,7 +265,7 @@ export class DockLayout {
     show(rb, v.rightBottom);
     show(this.splitRB, v.rightTop && v.rightBottom);
     rt.style.flex = '1';
-    if (v.rightTop) { rb.style.flex = 'none'; rb.style.height = `${s.rightBottom}px`; }
+    if (v.rightTop) { rb.style.flex = 'none'; rb.style.height = `${rbH}px`; }
     else { rb.style.flex = '1'; rb.style.height = ''; }
   }
 

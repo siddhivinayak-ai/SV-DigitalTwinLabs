@@ -105,6 +105,8 @@
 }
 .tree-row {
   display: flex; align-items: center;
+  width: max-content;
+  min-width: 100%;
   height: var(--row-h);
   padding-right: 6px;
   white-space: nowrap;
@@ -221,8 +223,9 @@
 
 .pg-desc {
   flex: none;
-  height: 44px;
+  height: 54px;
   padding: 3px 5px;
+  line-height: 1.35;
   background: var(--c-face);
   border-top: 1px solid var(--c-shadow);
   overflow: hidden;
