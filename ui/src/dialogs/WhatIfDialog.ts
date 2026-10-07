@@ -2,6 +2,9 @@
 // show a results table with improvement colouring.
 import type { PanelContext } from '../panels/panel';
 import type { WhatIfResult } from '../net/contracts';
+import type { Scenario, WhatIfRequest } from '../net/contracts'; // v0.2 ui-connections
+import { whatIfScenarioHook } from '../connections/ScenarioDialogs'; // v0.2 ui-connections
+import { scenarioOverrideRows, formatHorizon } from '../connections/logic'; // v0.2 ui-connections
 import { Dialog } from '../widgets/Dialog';
 import { ComboBox } from '../widgets/ComboBox';
 import { NumericInput } from '../widgets/NumericInput';
@@ -21,7 +24,7 @@ interface RowCtl { tr: HTMLTableRowElement; asset: ComboBox<string>; param: Comb
 let lastDuration = 8 * 3600;
 let lastFromLive = true;
 
-export function openWhatIfDialog(ctx: PanelContext): Dialog | null {
+export function openWhatIfDialog(ctx: PanelContext, saved?: { scenario: Scenario; rerun?: boolean }): Dialog | null {
   const { store, source } = ctx;
   const plant = store.plant;
   if (!plant) return null;
@@ -147,6 +150,27 @@ export function openWhatIfDialog(ctx: PanelContext): Dialog | null {
   const body = h('div', null, ovrBox, settings, resBox);
   body.style.width = '600px';
 
+  // ---- v0.2 ui-connections: saved scenarios (Save scenario… / Open saved…) ----
+  const scen = whatIfScenarioHook(ctx, {
+    currentRequest: (): WhatIfRequest => ({
+      durationS: dur.value ?? 8 * 3600, seed: seed.value, fromLive: fromLive.input.checked,
+      overrides: buildOverrides(rows.map((r) => ({ assetId: r.asset.value!, param: r.param.value!, value: r.value.value }))),
+    }),
+    load: (s) => {
+      rows.splice(0).forEach((r) => r.tr.remove());
+      for (const o of scenarioOverrideRows(s)) if (editable.some((a) => a.id === o.assetId)) addRow(o.assetId, o.param, o.value);
+      syncEmpty();
+      const d = s.request.durationS;
+      if (!WHATIF_DURATIONS.some((x) => x.value === d)) dur.setItems([...WHATIF_DURATIONS, { label: formatHorizon(d), value: d }], d);
+      else dur.setValue(d, true);
+      if (s.request.seed !== undefined) seed.setValue(s.request.seed);
+      fromLive.input.checked = s.request.fromLive ?? true;
+      if (s.result) showResult(s.result); else placeholder(`Loaded “${s.name}”. Press Run to simulate it.`);
+    },
+    run: () => dlg.buttons.get('run')?.click(),
+  });
+  // ---- end v0.2 ui-connections ----
+
   let running = false;
   const dlg = Dialog.open({
     title: 'What-If Scenario',
@@ -154,6 +178,7 @@ export function openWhatIfDialog(ctx: PanelContext): Dialog | null {
     body,
     width: 628,
     buttons: [
+      ...scen.buttons, // v0.2 ui-connections
       {
         id: 'run', text: 'Run', isDefault: true,
         onClick: async (d) => {
@@ -165,7 +190,9 @@ export function openWhatIfDialog(ctx: PanelContext): Dialog | null {
           d.setBusy(true);
           placeholder(`Running two headless simulations of ${(lastDuration / 3600).toFixed(0)} h…`, true);
           try {
-            const res = await source.whatIf({ durationS: lastDuration, overrides: buildOverrides(ovr), seed: seed.value, fromLive: lastFromLive });
+            const req = { durationS: lastDuration, overrides: buildOverrides(ovr), seed: seed.value, fromLive: lastFromLive };
+            const res = await source.whatIf(req);
+            scen.afterRun(req, res); // v0.2 ui-connections
             if (d.isOpen) showResult(res);
             postStatus(`What-if finished in ${res.elapsedMs} ms`, 'ok');
           } catch (e) {
@@ -175,6 +202,7 @@ export function openWhatIfDialog(ctx: PanelContext): Dialog | null {
           } finally {
             running = false;
             d.setBusy(false);
+            scen.refresh(); // v0.2 ui-connections
           }
           return false;
         },
@@ -182,5 +210,7 @@ export function openWhatIfDialog(ctx: PanelContext): Dialog | null {
       { id: 'close', text: 'Close', isCancel: true },
     ],
   });
+  scen.bind(dlg); // v0.2 ui-connections
+  if (saved) scen.loadSaved(saved.scenario, saved.rerun); // v0.2 ui-connections
   return dlg;
 }

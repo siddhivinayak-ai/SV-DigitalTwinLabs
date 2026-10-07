@@ -8,6 +8,12 @@ import { h, setText } from '../widgets/dom';
 import { formatNum, formatSimTime, severityRank } from '../shell/format';
 import { runCommand } from '../shell/actions';
 import { postStatus } from '../shell/status';
+// v0.2 ui-connections: deviation alarms + source filter
+import type { AlarmSource } from '../net/contracts';
+import { ComboBox } from '../widgets/ComboBox';
+import { svg } from '../widgets/dom';
+import { connIcons } from '../connections/icons';
+import { ALARM_SOURCE_ITEMS, alarmMatches, alarmSourceLabel } from '../connections/logic';
 
 /** Severity (critical first), then newest first, then id (pure). */
 export function sortAlarms(alarms: Iterable<Alarm>): Alarm[] {
@@ -37,13 +43,15 @@ export const createAlarmsPanel: PanelFactory = (ctx) => {
   let ackBtn: HTMLButtonElement, ackAllBtn: HTMLButtonElement;
   let summary: HTMLSpanElement;
   let raf = 0;
+  let srcFilter: AlarmSource | 'all' = 'all'; // v0.2 ui-connections
 
   const refresh = () => {
     raf = 0;
     const rows = sortAlarms(store.alarms.values());
-    grid.setRows(rows);
+    const shown = srcFilter === 'all' ? rows : rows.filter((a) => alarmMatches(a, '', srcFilter)); // v0.2 ui-connections
+    grid.setRows(shown);
     const s = alarmSummary(rows);
-    setText(summary, s.active ? `${s.active} active · ${s.unacked} unacknowledged` : 'No active alarms');
+    setText(summary, (s.active ? `${s.active} active · ${s.unacked} unacknowledged` : 'No active alarms') + (shown.length !== rows.length ? ` · ${shown.length} shown` : ''));
     ackAllBtn.disabled = s.unacked === 0;
     const sel = grid.selection ? store.alarms.get(grid.selection) : undefined;
     ackBtn.disabled = !sel || sel.acknowledged;
@@ -68,14 +76,15 @@ export const createAlarmsPanel: PanelFactory = (ctx) => {
         postStatus(bad ? `Acknowledged ${list.length - bad} of ${list.length} alarms` : `Acknowledged ${list.length} alarm(s)`, bad ? 'error' : 'ok');
       } });
       summary = h('span.count');
-      const tb = h('div.panel-toolbar', null, ackBtn, ackAllBtn, h('span.sep'), summary, h('span.grow'),
+      const srcCombo = new ComboBox<AlarmSource | 'all'>({ items: ALARM_SOURCE_ITEMS, value: 'all', width: 124, title: 'Filter by alarm source', onChange: (v) => { srcFilter = v; schedule(); } }); // v0.2 ui-connections
+      const tb = h('div.panel-toolbar', null, ackBtn, ackAllBtn, h('span.sep'), srcCombo.el, h('span.sep'), summary, h('span.grow'),
         h('span.dim', { text: 'Blinking = unacknowledged · double-click to acknowledge', style: 'padding-right:4px' }));
       const body = h('div.panel-fill');
       grid = new DataGrid<Alarm>({
         storageKey: 'svdtl.grid.alarms.v1',
         emptyText: 'No active alarms — the line is operating within limits.',
         rowId: (a) => a.id,
-        rowClass: (a) => (a.acknowledged ? 'acked' : `unack unack-${a.severity}`),
+        rowClass: (a) => (a.acknowledged ? 'acked' : `unack unack-${a.severity}`) + (a.source === 'deviation' ? ' dev-alarm' : ''), // v0.2: deviation marker
         onSelect: (a) => { if (a) store.select(a.assetId); schedule(); },
         onActivate: (a) => void ack(a),
         columns: [
@@ -91,10 +100,22 @@ export const createAlarmsPanel: PanelFactory = (ctx) => {
           },
           { key: 'raisedAtMs', title: 'Raised', width: 72, mono: true, text: (a) => formatSimTime(a.raisedAtMs), sortKey: (a) => a.raisedAtMs },
           { key: 'assetId', title: 'Asset', width: 70 },
-          { key: 'source', title: 'Source', width: 62 },
+          { // v0.2 ui-connections: deviation (shadow mode) gets its own icon and label
+            key: 'source', title: 'Source', width: 86, sortKey: (a) => a.source,
+            render: (cell, a) => {
+              if (cell.dataset.src === a.source) return;
+              cell.dataset.src = a.source;
+              cell.textContent = '';
+              const wrap = h(`span.src${a.source === 'deviation' ? '.dev' : ''}`);
+              if (a.source === 'deviation') wrap.append(svg(connIcons.deviation));
+              wrap.append(h('span.ct', { text: alarmSourceLabel(a.source) }));
+              wrap.title = a.source === 'deviation' ? 'Deviation: the real line differs from the engine prediction (shadow mode)' : '';
+              cell.append(wrap);
+            },
+          },
           { key: 'message', title: 'Message', width: 300 },
           { key: 'value', title: 'Value', width: 64, align: 'right', text: (a) => (a.value === undefined ? '' : formatNum(a.value, 2)), sortKey: (a) => a.value },
-          { key: 'limit', title: 'Limit', width: 58, align: 'right', text: (a) => (a.limit === undefined ? '' : formatNum(a.limit, 2)), sortKey: (a) => a.limit },
+          { key: 'limit', title: 'Limit / pred.', width: 74, tooltip: 'Limit; for deviation alarms the predicted value', align: 'right', text: (a) => (a.limit === undefined ? '' : formatNum(a.limit, 2)), sortKey: (a) => a.limit },
           { key: 'ack', title: 'State', width: 66, text: (a) => (a.acknowledged ? 'ACKED' : 'UNACK'), cellClass: (a) => (a.acknowledged ? 'dim' : 'tx-fault') },
           { key: 'id', title: 'Alarm Id', width: 160, mono: true },
         ],
