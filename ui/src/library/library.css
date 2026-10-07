@@ -1,0 +1,27 @@
+/* Mesh Library dialog. Tokens only. */
+.ml { display: flex; flex-direction: column; gap: 5px; width: 616px; }
+.ml-tb { display: flex; align-items: center; gap: 3px; }
+.ml-sep { width: 0; height: 18px; margin: 0 3px; border-left: 1px solid var(--c-shadow); border-right: 1px solid var(--c-hilite); }
+.ml-fill { flex: 1; }
+.ml-grid { position: relative; height: 210px; }
+.ml-foot { display: flex; align-items: center; gap: 6px; min-height: 16px; }
+.ml-prog {
+  position: relative; width: 160px; height: 14px; flex: none;
+  background: var(--c-field);
+  border: 1px solid; border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+}
+.ml-prog[hidden] { display: none; }
+.ml-prog i { position: absolute; top: 1px; bottom: 1px; left: 1px; width: 0; background: repeating-linear-gradient(90deg, var(--c-select) 0 8px, transparent 8px 10px); }
+.ml-status { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-text-dim); }
+.ml-status.ok { color: var(--c-text); }
+.ml-status.error { color: var(--sev-critical); white-space: pre-line; }
+.ml-target {
+  padding: 4px 6px; line-height: 16px;
+  background: var(--c-field);
+  border: 1px solid; border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+}
+.ml-target b { font-family: var(--font-mono); }
+.ml-target i { color: var(--c-text-dim); font-style: normal; }
+.ml-target code { font: var(--fs-small) var(--font-mono); color: var(--c-text-dim); }
+.ml .dlg-note { max-width: 616px; }
+.ml-confirm { white-space: pre-line; line-height: 1.45; padding: 2px 4px; }
