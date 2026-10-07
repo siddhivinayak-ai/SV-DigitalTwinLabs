@@ -1,0 +1,4 @@
+{
+  "description": "Two CNC machining centres fed by one conveyor and sharing a single operator, followed by a deburr robot, CMM inspection and packing. Teaches resource contention.",
+  "tags": ["machining", "cnc", "robot", "resources", "starter"]
+}
