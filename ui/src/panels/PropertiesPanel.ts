@@ -1,6 +1,6 @@
 // Properties: WinForms-PropertyGrid view of the selected asset. Identity, live state, KPI,
 // sensors (limit-coloured) and editable parameters (Enter → asset.params, revert on error).
-import type { AssetDef } from '../net/contracts';
+import type { AssetDef, PlantModel } from '../net/contracts';
 import type { Panel, PanelFactory } from './panel';
 import { PropertyGrid, type PgCategory } from '../widgets/PropertyGrid';
 import { ComboBox } from '../widgets/ComboBox';
@@ -27,6 +27,40 @@ const PARAM_HELP: Record<string, string> = {
   tempRiseC: 'Temperature rise above ambient at full load.',
   vibBaselineMms: 'Vibration baseline when running with zero wear.',
 };
+
+// ---- v0.3 identity rows (feature/ui-library). Read-only here; the Plant Builder edits them.
+type V03Key = 'lineId' | 'resourceId' | 'shiftId' | 'mesh';
+
+/** v0.3 identity rows to show: only when the plant uses the concept or the asset sets the field. */
+export function v03IdentityRows(plant: PlantModel | null, def: AssetDef): { key: V03Key; label: string; description: string }[] {
+  const rows: { key: V03Key; label: string; description: string }[] = [];
+  const ro = ' Read-only here: edit it in the Plant Builder.';
+  if (plant?.lines?.length || def.lineId) rows.push({ key: 'lineId', label: 'Line', description: 'Production line the asset belongs to (labelling group for per-line KPIs).' + ro });
+  if (plant?.resources?.length || def.resourceId) rows.push({ key: 'resourceId', label: 'Resource', description: 'Shared resource needed for each cycle; the asset is Starved while no unit is free.' + ro });
+  if (plant?.calendar?.shifts.length || def.shiftId) rows.push({ key: 'shiftId', label: 'Shift', description: 'Shift the asset runs in; it is Off outside the shift window.' + ro });
+  if (def.mesh || plant?.assets.some((a) => a.mesh)) rows.push({ key: 'mesh', label: 'Mesh', description: 'Custom glTF/GLB model shown in the 3D view (procedural model when empty). Manage files in Tools > Mesh Library.' + ro });
+  return rows;
+}
+
+/** Display text for a v0.3 identity row (name plus id, or an em dash). */
+export function v03IdentityText(plant: PlantModel | null, def: AssetDef, key: V03Key): string {
+  const pad = (h: number) => String(h).padStart(2, '0');
+  switch (key) {
+    case 'lineId': {
+      const l = def.lineId ? plant?.lines?.find((x) => x.id === def.lineId) : undefined;
+      return def.lineId ? (l ? `${l.name} (${l.id})` : `${def.lineId} (unknown)`) : '(none)';
+    }
+    case 'resourceId': {
+      const r = def.resourceId ? plant?.resources?.find((x) => x.id === def.resourceId) : undefined;
+      return def.resourceId ? (r ? `${r.name} (${r.count} × ${r.kind})` : `${def.resourceId} (unknown)`) : '(none)';
+    }
+    case 'shiftId': {
+      const sh = def.shiftId ? plant?.calendar?.shifts.find((x) => x.id === def.shiftId) : undefined;
+      return def.shiftId ? (sh ? `${sh.name} (${pad(sh.startHour)}–${pad(sh.endHour)} h)` : `${def.shiftId} (unknown)`) : '(always on)';
+    }
+    case 'mesh': return def.mesh ?? '(procedural)';
+  }
+}
 
 export const createPropertiesPanel: PanelFactory = (ctx) => {
   const { store, source } = ctx;
@@ -57,6 +91,7 @@ export const createPropertiesPanel: PanelFactory = (ctx) => {
           { key: 'name', label: 'Name', kind: 'text' },
           { key: 'kind', label: 'Kind', kind: 'text' },
           { key: 'downstream', label: 'Downstream', kind: 'text', description: 'Assets that receive parts from this one (round-robin when several).' },
+          ...v03IdentityRows(store.plant, def).map((r) => ({ key: `v03.${r.key}`, label: r.label, kind: 'text' as const, description: r.description })),
         ],
       },
       {
@@ -109,6 +144,7 @@ export const createPropertiesPanel: PanelFactory = (ctx) => {
     grid.setValue('name', def.name);
     grid.setValue('kind', def.kind);
     grid.setValue('downstream', def.downstream.join(', ') || '—');
+    for (const r of v03IdentityRows(store.plant, def)) grid.setValue(`v03.${r.key}`, v03IdentityText(store.plant, def, r.key));
     writeParams(def);
     tick();
     kpi();
