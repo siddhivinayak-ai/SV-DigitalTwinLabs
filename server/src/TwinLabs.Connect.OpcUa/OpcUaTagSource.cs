@@ -176,7 +176,7 @@ public sealed class OpcUaTagSource : ITagSource
         string? lastError = null;
         while (!ct.IsCancellationRequested)
         {
-            SetStatus(ConnectionState.Connecting, lastError);
+            SetStatus(ConnectionState.Connecting, lastError, gen: gen);
             TaskCompletionSource<string> fatal;
             try
             {
@@ -204,7 +204,7 @@ public sealed class OpcUaTagSource : ITagSource
 
                 delay = _ctx.Options.MinReconnectDelay;
                 lastError = null;
-                SetStatus(ConnectionState.Connected, _nodeIdProblems);
+                SetStatus(ConnectionState.Connected, _nodeIdProblems, gen: gen);
                 _log.LogInformation("OPC UA {Id}: connected to {Endpoint}", Definition.Id, Definition.Endpoint);
 
                 lastError = await fatal.Task.WaitAsync(ct).ConfigureAwait(false);
@@ -220,7 +220,7 @@ public sealed class OpcUaTagSource : ITagSource
                 lastError = Describe(ex);
                 _log.LogWarning("OPC UA {Id}: connect to {Endpoint} failed: {Error}; retrying in {Delay}",
                     Definition.Id, Definition.Endpoint, lastError, delay);
-                SetStatus(ConnectionState.Error, lastError);
+                SetStatus(ConnectionState.Error, lastError, gen: gen);
                 try
                 {
                     await Task.Delay(Jitter(delay), ct).ConfigureAwait(false);
@@ -389,22 +389,26 @@ public sealed class OpcUaTagSource : ITagSource
     private void OnKeepAlive(ISession session, KeepAliveEventArgs e)
     {
         if (e.Status is null || ServiceResult.IsGood(e.Status)) return;
+        long gen;
         lock (_sync)
         {
             if (!ReferenceEquals(session, _session) || _reconnect is null || _reconnecting) return;
+            gen = _generation;
             _reconnecting = true;
             _reconnect.BeginReconnect(session, (int)_ctx.Options.MinReconnectDelay.TotalMilliseconds, OnReconnectComplete);
         }
         _log.LogWarning("OPC UA {Id}: keep-alive failed ({Status}); reconnecting", Definition.Id, e.Status);
-        SetStatus(ConnectionState.Connecting, $"Connection lost ({e.Status.StatusCode}); reconnecting");
+        SetStatus(ConnectionState.Connecting, $"Connection lost ({e.Status.StatusCode}); reconnecting", gen: gen);
     }
 
     private void OnReconnectComplete(object? sender, EventArgs e)
     {
         ISession? old = null;
+        long gen;
         lock (_sync)
         {
             if (!ReferenceEquals(sender, _reconnect) || _reconnect is null) return;
+            gen = _generation;
             var fresh = _reconnect.Session;
             if (fresh is null)
             {
@@ -424,7 +428,7 @@ public sealed class OpcUaTagSource : ITagSource
         }
         if (old is not null) Utils.SilentDispose(old);
         _log.LogInformation("OPC UA {Id}: reconnected", Definition.Id);
-        SetStatus(ConnectionState.Connected, _nodeIdProblems);
+        SetStatus(ConnectionState.Connected, _nodeIdProblems, gen: gen);
     }
 
     // ------------------------------------------------------------------ helpers
@@ -480,11 +484,13 @@ public sealed class OpcUaTagSource : ITagSource
         Utils.SilentDispose(session);
     }
 
-    private void SetStatus(ConnectionState state, string? error, int? boundTags = null)
+    /// <param name="gen">When set, the update is dropped if the source was stopped/restarted since (stale callback).</param>
+    private void SetStatus(ConnectionState state, string? error, int? boundTags = null, long? gen = null)
     {
         ConnectionStatus published;
         lock (_statusLock)
         {
+            if (gen is { } g && g != Interlocked.Read(ref _generation)) return;
             var current = Volatile.Read(ref _status);
             var next = current with { Status = state, Error = error, BoundTags = boundTags ?? current.BoundTags };
             if (next == current) return;
