@@ -20,7 +20,7 @@ An open-source **digital twin of a manufacturing production line**. A C# simulat
 | `server/` | .NET 10 solution: `Core`, `Simulation`, `Analytics`, `Api`, `Tests` |
 | `ui/` | Web console: Vite + vanilla TypeScript, no framework |
 | `twin-engine/` | Unity 6 client that renders the same live twin |
-| `docs/` | Vision, architecture and the V1 spec |
+| `docs/` | Vision, architecture, the V1 spec and the [roadmap](docs/ROADMAP.md) |
 | `scripts/` | Dev and smoke-test scripts |
 
 ## Quick start
