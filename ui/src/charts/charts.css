@@ -1,0 +1,27 @@
+/* MATLAB-style plot chrome around uPlot (TrendPlot) and the canvas instruments. Uses tokens.css. */
+.tp { position: relative; background: var(--plot-bg); overflow: hidden; }
+.tp .uplot { font-family: Helvetica, Arial, var(--font-ui); line-height: 1; }
+.tp .u-wrap { background: transparent; }
+.tp .u-axis { color: var(--plot-axis); }
+.tp .u-cursor-x { border-right: 1px solid var(--plot-axis); opacity: 0.45; }
+.tp .u-cursor-y { border-bottom: 1px solid var(--plot-axis); opacity: 0.45; }
+.tp .u-select { background: rgba(15, 98, 254, 0.07); border: 1px dotted var(--plot-axis); }
+.tp .u-over { cursor: crosshair; }
+
+.tp-legend {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  padding: 2px 5px 2px 4px;
+  font: 10px/13px Helvetica, Arial, var(--font-ui);
+  color: var(--plot-axis);
+  background: var(--plot-bg);
+  border: 1px solid var(--plot-axis);
+  pointer-events: none;
+  z-index: 2;
+}
+.tp-lg-row { display: grid; grid-template-columns: 18px auto auto; align-items: center; column-gap: 5px; white-space: nowrap; }
+.tp-lg-row i { display: block; height: 2px; }
+.tp-lg-row b { font: 10px/13px var(--font-mono); font-weight: normal; min-width: 66px; text-align: right; }
+
+.kg-arc, .kg-bar, .kg-spark { display: block; width: 100%; height: 100%; }
