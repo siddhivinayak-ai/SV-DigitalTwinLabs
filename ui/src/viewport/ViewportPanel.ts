@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
-import type { AssetDef, AssetState } from '../net/contracts';
+import type { AssetDef, AssetState, ResourceKind } from '../net/contracts';
 import type { Panel, PanelContext, PanelFactory } from '../panels/panel';
 import type { TwinStore } from '../state/store';
 import { cssVar } from '../charts/theme';
-import { buildAsset, type AssetView } from './assets';
+import { buildAsset, StackLight, type AssetView } from './assets';
 import { easeInOut, fitDistance, presetDirection, type ViewPreset } from './camera';
 import { applyDevParams } from './dev';
 import { bracketGeometry, buildFlowLines, buildGrid, buildSafetyLines, floorExtent, footprintGeometry } from './floor';
@@ -13,6 +13,8 @@ import { AxisGizmo } from './gizmo';
 import { Kit } from './kit';
 import { PART, partWorldPosition } from './placement';
 import { isAbnormal, lensOn, STATE_LABEL, stateColor } from './status';
+import { instantiateFitted, meshCache } from './meshes';
+import { lineZones, resourceWait, shiftDimmed, shiftOf } from './v03';
 import './viewport.css';
 
 const SELECT_COLOR = 0x0f62fe;
@@ -35,7 +37,18 @@ interface AssetExtras {
   outlineMat: THREE.LineBasicMaterial;
   lastState?: AssetState['state'];
   prog: { from: number; to: number; t0: number; shown: number };
+  /** Children of the root built by the procedural model (detached when a custom mesh loads). */
+  procedural: THREE.Object3D[];
+  /** v0.3: fitted glTF instance once loaded. */
+  custom: THREE.Object3D | null;
+  /** v0.3: resource-wait glyph above the asset. */
+  res: CSS2DObject;
+  resKind: ResourceKind | null;
+  dimmed: boolean;
 }
+
+/** v0.3 line zone: floor tint + border + name label. */
+interface ZoneVis { fill: THREE.MeshBasicMaterial; edge: THREE.LineBasicMaterial; label: HTMLElement; index: number }
 
 interface Tween { p0: THREE.Vector3; p1: THREE.Vector3; t0v: THREE.Vector3; t1v: THREE.Vector3; start: number; dur: number }
 
@@ -100,6 +113,11 @@ class ViewportPanel implements Panel {
   private showLabels = true;
   private showGrid = true;
   private showFlow = true;
+  private showLines = true;
+  private zoneGroup: THREE.Group | null = null;
+  private zones: ZoneVis[] = [];
+  /** Dimmed (shift-Off) material variants, keyed by the original material. */
+  private readonly dimMats = new Map<THREE.Material, THREE.Material>();
   private tween: Tween | null = null;
   private visible = true;
   private raf = 0;
@@ -214,6 +232,7 @@ class ViewportPanel implements Panel {
     cv.removeEventListener('contextmenu', preventDefault);
     this.controls.removeEventListener('start', this.onControlsStart);
     this.clearPlant();
+    meshCache.retain(new Set());
     for (const m of this.pool) m.removeFromParent();
     this.pool.length = 0;
     this.controls.dispose();
@@ -232,10 +251,17 @@ class ViewportPanel implements Panel {
     this.clearSelection();
     for (const a of this.assets.values()) {
       a.label.element.remove();
+      a.res.element.remove();
       a.outline.geometry.dispose();
       a.outlineMat.dispose();
+      // a.custom shares geometry/materials with the cached template (freed by meshCache.retain)
     }
     this.assets.clear();
+    for (const m of this.dimMats.values()) m.dispose();
+    this.dimMats.clear();
+    for (const z of this.zones) { z.fill.dispose(); z.edge.dispose(); z.label.remove(); }
+    this.zones = [];
+    this.zoneGroup = null;
     this.plantGroup.clear();
     // floor, grid, safety tape and flow arrows own their geometry
     this.envGroup.traverse((o) => {
@@ -261,8 +287,12 @@ class ViewportPanel implements Panel {
     const glow = kit.glowTexture();
     this.defs = new Map(plant.assets.map((a) => [a.id, a]));
     const box = new THREE.Box3();
+    // v0.3 custom meshes: keep cached templates the new plant still uses, free the rest
+    meshCache.retain(new Set(plant.assets.map((a) => a.mesh).filter((u): u is string => !!u)));
     for (const def of plant.assets) {
       const view = buildAsset(def, { kit, glow, assets: plant.assets });
+      const procedural = [...view.root.children];
+      view.light.group.userData.noDim = true;
       this.plantGroup.add(view.root);
       view.root.updateMatrixWorld(true);
       box.union(view.bounds.clone().applyMatrix4(view.root.matrixWorld));
@@ -286,9 +316,22 @@ class ViewportPanel implements Panel {
       outline.position.copy(ob.getCenter(new THREE.Vector3()));
       outline.visible = false;
       outline.userData.noPick = true;
+      outline.userData.noDim = true;
       view.root.add(outline);
 
-      this.assets.set(def.id, { view, label, labelDot: dot, outline, outlineMat, prog: { from: 0, to: 0, t0: 0, shown: 0 } });
+      const resEl = el('div', 'vp-res');
+      resEl.hidden = true;
+      const res = new CSS2DObject(resEl);
+      res.position.copy(label.position);
+      res.center.set(0.5, 1);
+      view.root.add(res);
+
+      const extras: AssetExtras = {
+        view, label, labelDot: dot, outline, outlineMat, prog: { from: 0, to: 0, t0: 0, shown: 0 },
+        procedural, custom: null, res, resKind: null, dimmed: false,
+      };
+      this.assets.set(def.id, extras);
+      if (def.mesh) void this.loadMesh(extras, def.mesh);
     }
     if (!box.isEmpty()) this.plantBox = box;
 
@@ -306,6 +349,7 @@ class ViewportPanel implements Panel {
     this.flowMesh = buildFlowLines(plant.assets, this.flowMat);
     this.flowMesh.visible = this.showFlow;
     this.envGroup.add(floor, grid.group, buildSafetyLines(plant.assets, this.safetyMat), this.flowMesh);
+    this.buildZones();
 
     // shadow frustum around the plant
     const c = this.plantBox.getCenter(new THREE.Vector3());
@@ -317,6 +361,7 @@ class ViewportPanel implements Panel {
     sc.updateProjectionMatrix();
 
     this.applyLabelVisibility();
+    this.syncToggles();
     this.applyTheme();
     this.onTick();
     this.updateSelection();
@@ -339,6 +384,7 @@ class ViewportPanel implements Panel {
     for (const [id, a] of this.assets) {
       const st = this.store.assets.get(id);
       if (st?.state !== a.lastState) this.applyState(a, st?.state);
+      this.applyV03Cues(a, st?.state);
       const p = st?.cycleProgress ?? 0;
       const pr = a.prog;
       pr.from = p + 0.25 < pr.shown ? p : pr.shown; // new cycle: restart instead of running backwards
@@ -383,6 +429,181 @@ class ViewportPanel implements Panel {
     a.outlineMat.color.set(col);
     a.outlineMat.opacity = 0.95;
     a.outline.visible = isAbnormal(s);
+  }
+
+  // ------------------------------------------------------------------ v0.3: custom meshes
+
+  private async loadMesh(a: AssetExtras, url: string): Promise<void> {
+    const id = a.view.def.id;
+    try {
+      const template = await meshCache.load(url);
+      if (this.assets.get(id) !== a || !this.kit) return; // plant was rebuilt meanwhile
+      this.applyMesh(a, template);
+    } catch (e) {
+      if (this.assets.get(id) === a) console.warn(`[viewport] mesh '${url}' for ${id} could not be loaded; keeping the procedural model.`, e);
+    }
+  }
+
+  /** Swap the procedural model for a fitted glTF instance, keeping a floor-standing stack light. */
+  private applyMesh(a: AssetExtras, template: THREE.Object3D): void {
+    const kit = this.kit!;
+    const { view } = a;
+    const def = view.def;
+    let fitted: { group: THREE.Group; height: number };
+    try {
+      fitted = instantiateFitted(template, def.size, def.id);
+    } catch (e) {
+      console.warn(`[viewport] mesh for ${def.id} could not be instantiated; keeping the procedural model.`, e);
+      return;
+    }
+    const wasDimmed = a.dimmed;
+    if (wasDimmed) this.applyDim(a, false);
+    for (const c of a.procedural) c.removeFromParent(); // geometry is owned by the Kit and freed with it
+    a.procedural = [];
+    view.root.add(fitted.group);
+    a.custom = fitted.group;
+
+    // stack light on a slim post at the rear-right corner of the size box
+    const sx = def.size.x / 2, sz = def.size.z / 2;
+    const px = sx - 0.06, pz = -sz + 0.06, postH = Math.max(0.3, fitted.height);
+    const post = kit.cyl(view.root, 0.022, postH, kit.mats.steelDark, px, postH / 2, pz, 'y', 8);
+    post.userData.assetId = def.id;
+    const light = new StackLight(kit, view.root, px, pz, postH, kit.glowTexture());
+    light.group.userData.noDim = true;
+    light.group.traverse((o) => (o.userData.assetId = def.id));
+    view.light = light;
+    view.grip = undefined;
+    view.animate = () => {};
+    view.bounds = new THREE.Box3(new THREE.Vector3(-sx, 0, -sz), new THREE.Vector3(sx, Math.max(def.size.y, fitted.height, light.top), sz));
+
+    // label, resource glyph and status outline follow the new bounds
+    a.label.position.set(0, view.bounds.max.y + 0.22, 0);
+    a.res.position.copy(a.label.position);
+    const ob = view.bounds.clone().expandByScalar(0.035);
+    ob.min.y = 0.01;
+    const size = ob.getSize(new THREE.Vector3());
+    const boxGeo = new THREE.BoxGeometry(size.x, size.y, size.z);
+    a.outline.geometry.dispose();
+    a.outline.geometry = new THREE.EdgesGeometry(boxGeo);
+    boxGeo.dispose();
+    a.outline.position.copy(ob.getCenter(new THREE.Vector3()));
+
+    light.refreshColors();
+    this.applyState(a, this.store.assets.get(def.id)?.state);
+    if (wasDimmed) this.applyDim(a, true);
+    if (this.store.selection === def.id) this.updateSelection();
+  }
+
+  // ------------------------------------------------------------------ v0.3: shift dimming, resource wait
+
+  private applyV03Cues(a: AssetExtras, s: AssetState['state'] | undefined): void {
+    const plant = this.store.plant;
+    const def = a.view.def;
+    const dim = shiftDimmed(plant, def, s, this.store.sim.simTimeMs);
+    if (dim !== a.dimmed) this.applyDim(a, dim);
+    const kind = resourceWait(plant, def, s);
+    if (kind !== a.resKind) {
+      a.resKind = kind;
+      const e = a.res.element;
+      e.hidden = !kind;
+      if (kind) {
+        const r = plant?.resources?.find((x) => x.id === def.resourceId);
+        e.innerHTML = `<i>${RES_GLYPH[kind]}</i>`;
+        e.title = `Waiting for ${r?.name ?? def.resourceId} (${kind})`;
+      }
+    }
+  }
+
+  /** Grey the model out (stack light, outline and selection excluded) by swapping in dimmed material variants. */
+  private applyDim(a: AssetExtras, on: boolean): void {
+    a.dimmed = on;
+    a.label.element.classList.toggle('dim', on);
+    const visit = (o: THREE.Object3D) => {
+      if (o.userData.noDim || o === this.selGroup) return;
+      const m = o as THREE.Mesh;
+      if ((m.isMesh || (o as THREE.LineSegments).isLineSegments) && m.material && !Array.isArray(m.material)) {
+        if (on) {
+          if (!m.userData.baseMat) m.userData.baseMat = m.material;
+          m.material = this.dimVariant(m.userData.baseMat as THREE.Material);
+        } else if (m.userData.baseMat) {
+          m.material = m.userData.baseMat as THREE.Material;
+          delete m.userData.baseMat;
+        }
+      }
+      for (const c of o.children) visit(c);
+    };
+    visit(a.view.root);
+  }
+
+  private dimVariant(base: THREE.Material): THREE.Material {
+    let d = this.dimMats.get(base);
+    if (d) return d;
+    d = base.clone();
+    const bg = new THREE.Color(cssVar('--vp-bg', '#c8ccd2'));
+    const c = (d as THREE.MeshStandardMaterial).color;
+    if (c) c.lerp(bg, 0.62);
+    const em = (d as THREE.MeshStandardMaterial).emissive;
+    if (em) em.multiplyScalar(0.15);
+    if ((d as THREE.LineBasicMaterial).isLineBasicMaterial) d.opacity *= 0.45;
+    this.dimMats.set(base, d);
+    return d;
+  }
+
+  private refreshDim(): void {
+    const dimmed = [...this.assets.values()].filter((a) => a.dimmed);
+    for (const a of dimmed) this.applyDim(a, false);
+    for (const m of this.dimMats.values()) m.dispose();
+    this.dimMats.clear();
+    for (const a of dimmed) this.applyDim(a, true);
+  }
+
+  // ------------------------------------------------------------------ v0.3: line zones
+
+  private buildZones(): void {
+    const plant = this.store.plant;
+    if (!plant) return;
+    const zones = lineZones(plant);
+    if (!zones.length) return;
+    const g = new THREE.Group();
+    g.name = 'line-zones';
+    for (const z of zones) {
+      const w = z.x1 - z.x0, d = z.z1 - z.z0;
+      const fill = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.1, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, d), fill);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set((z.x0 + z.x1) / 2, 0.003, (z.z0 + z.z1) / 2);
+      plane.userData.noPick = true;
+      plane.renderOrder = -1;
+      const edge = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.75, depthWrite: false });
+      const y = 0.006;
+      const pts = [z.x0, y, z.z0, z.x1, y, z.z0, z.x1, y, z.z1, z.x0, y, z.z1, z.x0, y, z.z0];
+      const lg = new THREE.BufferGeometry();
+      lg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+      const border = new THREE.Line(lg, edge);
+      border.userData.noPick = true;
+      const lbl = el('div', 'vp-zone');
+      lbl.textContent = z.name;
+      lbl.title = `${z.name} (${z.lineId}) - ${z.assets} asset${z.assets === 1 ? '' : 's'}`;
+      const lo = new CSS2DObject(lbl);
+      lo.position.set(z.x0, 0, z.z1);
+      lo.center.set(0, 1);
+      g.add(plane, border, lo);
+      this.zones.push({ fill, edge, label: lbl, index: z.index });
+    }
+    g.visible = this.showLines;
+    this.zoneGroup = g;
+    this.envGroup.add(g);
+  }
+
+  private applyZoneTheme(): void {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    for (const z of this.zones) {
+      const col = cssVar(`--plot-${(z.index % 7) + 1}`, ZONE_FALLBACK[z.index % 7]);
+      z.fill.color.set(col);
+      z.fill.opacity = dark ? 0.16 : 0.13;
+      z.edge.color.set(col);
+      z.label.style.borderLeftColor = col;
+    }
   }
 
   private acquirePart(): THREE.Mesh {
@@ -457,7 +678,7 @@ class ViewportPanel implements Panel {
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
     this.gizmo.render(this.renderer, this.camera);
-    if (this.showLabels) this.labels.render(this.scene, this.camera);
+    this.labels.render(this.scene, this.camera);
   };
 
   // ------------------------------------------------------------------ camera
@@ -566,6 +787,7 @@ class ViewportPanel implements Panel {
       `<div class="vp-tip-h"><b>${esc(def.id)}</b><span>${esc(def.kind)}</span></div>` +
       `<div class="vp-tip-n">${esc(def.name)}</div>` +
       `<div class="vp-tip-s"><i style="background:${stateColor(s, cssVar)}"></i>${STATE_LABEL[s]}<span class="num">${fmtDur(since)}</span></div>` +
+      this.tipV03(def, s) +
       (st ? `<div class="vp-tip-g"><span>WIP</span><b class="num">${st.wip}</b><span>Good</span><b class="num">${st.good}</b><span>Scrap</span><b class="num">${st.scrap}</b>` +
         `<span>Load</span><b class="num">${(st.load * 100).toFixed(0)} %</b><span>Wear</span><b class="num">${(st.wear * 100).toFixed(1)} %</b></div>` : '');
     this.tooltip.hidden = false;
@@ -575,6 +797,27 @@ class ViewportPanel implements Panel {
     if (x + tw > r.width - 4) x = this.pointerClient.x - r.left - tw - 10;
     if (y + th > r.height - 4) y = this.pointerClient.y - r.top - th - 10;
     this.tooltip.style.transform = `translate(${Math.max(2, x)}px, ${Math.max(2, y)}px)`;
+  }
+
+  /** v0.3 tooltip rows: line, resource, shift (with the reason for Off / Starved). */
+  private tipV03(def: AssetDef, s: AssetState['state']): string {
+    const plant = this.store.plant;
+    const rows: string[] = [];
+    const line = def.lineId ? plant?.lines?.find((l) => l.id === def.lineId) : undefined;
+    if (def.lineId) rows.push(`<span>Line</span><b>${esc(line?.name ?? def.lineId)}</b>`);
+    if (def.resourceId) {
+      const r = plant?.resources?.find((x) => x.id === def.resourceId);
+      const wait = resourceWait(plant, def, s);
+      rows.push(`<span>Resource</span><b${wait ? ' class="warn"' : ''}>${esc(r ? `${r.name} x${r.count}` : def.resourceId)}${wait ? ' (waiting)' : ''}</b>`);
+    }
+    if (def.shiftId) {
+      const sh = shiftOf(plant, def);
+      const off = shiftDimmed(plant, def, s, this.store.sim.simTimeMs);
+      const win = sh ? ` ${pad2(sh.startHour)}-${pad2(sh.endHour)} h` : '';
+      rows.push(`<span>Shift</span><b>${esc(sh?.name ?? def.shiftId)}${win}${off ? ' (off shift)' : ''}</b>`);
+    }
+    if (def.mesh) rows.push(`<span>Mesh</span><b>${this.assets.get(def.id)?.custom ? 'custom glTF' : 'procedural (fallback)'}</b>`);
+    return rows.length ? `<div class="vp-tip-x">${rows.join('')}</div>` : '';
   }
 
   private readonly onControlsStart = (): void => { this.tween = null; };
@@ -627,6 +870,7 @@ class ViewportPanel implements Panel {
     btn('labels', 'Labels', 'Show asset id labels', () => { this.showLabels = !this.showLabels; this.applyLabelVisibility(); }, true);
     btn('grid', 'Grid', 'Show 1 m floor grid', () => { this.showGrid = !this.showGrid; if (this.gridGroup) this.gridGroup.visible = this.showGrid; this.syncToggles(); }, true);
     btn('flow', 'Flow', 'Show material-flow arrows', () => { this.showFlow = !this.showFlow; if (this.flowMesh) this.flowMesh.visible = this.showFlow; this.syncToggles(); }, true);
+    btn('lines', 'Lines', 'Show production-line zones (plants with lines)', () => { this.showLines = !this.showLines; if (this.zoneGroup) this.zoneGroup.visible = this.showLines; this.syncToggles(); }, true);
     this.root.appendChild(hud);
   }
 
@@ -634,10 +878,16 @@ class ViewportPanel implements Panel {
     this.hudButtons.get('labels')?.setAttribute('aria-pressed', String(this.showLabels));
     this.hudButtons.get('grid')?.setAttribute('aria-pressed', String(this.showGrid));
     this.hudButtons.get('flow')?.setAttribute('aria-pressed', String(this.showFlow));
+    const lines = this.hudButtons.get('lines');
+    if (lines) {
+      lines.setAttribute('aria-pressed', String(this.showLines && this.zones.length > 0));
+      lines.disabled = this.zones.length === 0;
+    }
   }
 
   private applyLabelVisibility(): void {
-    this.labels.domElement.style.display = this.showLabels ? '' : 'none';
+    // asset id labels only; line-zone names and resource glyphs have their own toggles/conditions
+    this.labels.domElement.classList.toggle('no-ids', !this.showLabels);
     this.syncToggles();
   }
 
@@ -661,6 +911,8 @@ class ViewportPanel implements Panel {
       a.view.light.refreshColors();
       this.applyState(a, this.store.assets.get(a.view.def.id)?.state);
     }
+    this.applyZoneTheme();
+    this.refreshDim();
   }
 }
 
@@ -683,6 +935,19 @@ function fmtDur(sec: number): string {
   const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
   return m < 60 ? `${m}:${String(s).padStart(2, '0')}` : `${Math.floor(m / 60)} h ${m % 60} m`;
 }
+
+function pad2(h: number): string {
+  return String(h).padStart(2, '0');
+}
+
+const ZONE_FALLBACK = ['#0072bd', '#d95319', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f'];
+
+/** 12px resource glyphs (operator figure, AGV, tool). */
+const RES_GLYPH: Record<ResourceKind, string> = {
+  operator: '<svg viewBox="0 0 12 12" width="12" height="12"><circle cx="6" cy="2.6" r="1.9" fill="currentColor"/><path d="M2.2 11.5V8a3.8 3.8 0 0 1 7.6 0v3.5z" fill="currentColor"/></svg>',
+  agv: '<svg viewBox="0 0 12 12" width="12" height="12"><rect x="1" y="4" width="10" height="4.5" fill="currentColor"/><rect x="3" y="2" width="4" height="2" fill="currentColor"/><circle cx="3.2" cy="9.6" r="1.4" fill="currentColor"/><circle cx="8.8" cy="9.6" r="1.4" fill="currentColor"/></svg>',
+  tool: '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M8.2 1a2.8 2.8 0 0 0-2.7 3.5L1.3 8.7a1.2 1.2 0 0 0 1.7 1.7l4.2-4.2A2.8 2.8 0 0 0 10.7 3.5L9.2 5 7.4 4.6 7 2.8 8.5 1.3A2.8 2.8 0 0 0 8.2 1z" fill="currentColor"/></svg>',
+};
 
 function preventDefault(e: Event): void {
   e.preventDefault();
