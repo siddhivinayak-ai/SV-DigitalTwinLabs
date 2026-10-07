@@ -75,9 +75,9 @@ Each sensor has the shape `{ id, assetId, kind, unit, value }`. Noise is Gaussia
 - **Bottleneck:** the asset with the highest active fraction (Running + Fault). When values are close, the tie-break is the lowest Blocked fraction.
 - **Alarms (ISA-18.2 style, so operators aren't flooded):**
   - **Limit (`hi`/`hiHi`):** on-delay of 3 samples, off-delay of 10 samples below `hi×0.98`. Running-only signals (vibration, power, current, speed) are held while their asset is stopped, so idle values never clear or re-trigger an alarm.
-  - **Anomaly:** an EWMA mean and variance (α=0.05) for vibration, power, current and speed; temperature is limit-only. Sensors are judged only while the asset is Running, after a 30-sample settle period and a 50-sample warm-up. |z| > 4 for 3 samples is a `warning` and |z| > 6 is `critical`. It clears after 10 samples with |z| < 2.
+  - **Anomaly:** an EWMA mean and variance (α=0.05) on **vibration only**, the condition-monitoring signal. Temperature, power, current and speed follow load steps by design, so they are limit-only. Sensors are judged only while the asset is Running, after a 30-sample settle period and a 50-sample warm-up. |z| > 4 for 3 samples is a `warning` and |z| > 6 is `critical`. It clears after 10 samples with |z| < 2.
   - **Fault:** a `critical` alarm is active while the asset is in Fault.
-  - **Target:** fewer than 6 alarm raises per hour on the sample line. Measured: about 36 per 8 h.
+  - **Target:** fewer than 6 alarm raises per hour on the sample line. Measured: 32 per 8 h.
 - **What-if:** take the base plant (the live engine's current params when `fromLive`, otherwise the original model). Build two fresh engines with the same seed: the baseline as-is and the scenario with overrides applied. Run each headless for `durationS` and return both KPI reports plus the deltas (`oee`, `availability`, `performance`, `quality`, `throughputPerHour`, `good`, `scrap`, `wip`).
 
 ## 4. UI design language

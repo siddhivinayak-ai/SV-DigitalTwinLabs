@@ -14,7 +14,7 @@ Any change to the contract has to update **all three**, plus `examples/`.
 - JSON with camelCase property names. Enums are camelCase strings, for example `"running"` or `"fault"`.
 - **Null fields are omitted.** Optional fields can be absent.
 - Times are **sim milliseconds** since reset (`t`, `simTimeMs`, `timeMs`, `stateSinceMs` …) and are always integers.
-- Coordinates are metres in a right-handed frame with Y up. X runs along the line. Unity is left-handed, so Unity clients negate Z.
+- Coordinates are metres in a right-handed frame with Y up. X runs along the line. Unity is left-handed, so Unity clients negate Z. `rotationY` is in **degrees** (counter-clockwise about +Y; Unity negates it).
 - Sensor ids are `"<ASSET-ID>.<suffix>"`, for example `CNC-01.temp`.
 
 ## Plant model

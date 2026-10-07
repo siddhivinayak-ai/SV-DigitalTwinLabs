@@ -60,8 +60,9 @@ public sealed class AnomalyDetector(PlantModel plant) : IAnomalyDetector
             // asset stops; judging them then makes limit alarms chatter. Hold the limit state instead.
             if (running || !IsRunningOnlySignal(def.Kind)) ObserveLimit(simTimeMs, def, sv.V, changes);
 
-            // Slow thermal signals are covered by hi/hiHi limits; EWMA would flag every load transition.
-            if (def.Kind is SensorKind.Count or SensorKind.Level or SensorKind.Temperature) continue;
+            // Statistical anomaly detection targets vibration (the condition-monitoring signal). Temperature,
+            // power and current follow load steps by design and are covered by hi/hiHi limits instead.
+            if (def.Kind is not SensorKind.Vibration) continue;
             if (!_ewma.TryGetValue(def.Id, out var e)) _ewma[def.Id] = e = new EwmaState();
             if (!running)
             {
