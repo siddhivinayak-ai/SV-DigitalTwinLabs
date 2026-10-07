@@ -49,7 +49,7 @@ public sealed class MqttTagSource : ITagSource
     {
         Definition = definition;
         _clientId = string.IsNullOrWhiteSpace(definition.ClientId)
-            ? $"twinlabs-{definition.Id}-{Guid.NewGuid():N}"[..Math.Min(64, 10 + definition.Id.Length + 33)]
+            ? GenerateClientId(definition.Id)
             : definition.ClientId!;
     }
 
@@ -83,6 +83,7 @@ public sealed class MqttTagSource : ITagSource
             _stopped = false;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         }
+        SetState(ConnectionState.Connecting, null);
         if (!MqttEndpoint.TryParse(Definition.Endpoint, out var ep, out var epError))
         {
             SetState(ConnectionState.Error, epError);
@@ -121,8 +122,6 @@ public sealed class MqttTagSource : ITagSource
         _wildcards = subs.Values.Where(s => s.Wildcard).ToArray();
         _warnings = warnings;
         _bound = bound;
-        _state = ConnectionState.Connecting;
-        _error = WarningText();
     }
 
     private string? WarningText() => _warnings.Count == 0 ? null : string.Join("; ", _warnings);
@@ -297,12 +296,18 @@ public sealed class MqttTagSource : ITagSource
         IMqttClient? client;
         lock (_gate)
         {
-            if (_stopped || _loop is null && _cts is null) { _stopped = true; }
+            _stopped = true; // blocks late status updates from the loop and client callbacks
             cts = _cts; loop = _loop; client = _client;
             _cts = null; _loop = null; _client = null;
         }
         if (cts is not null) { try { cts.Cancel(); } catch (ObjectDisposedException) { } }
         if (loop is not null) { try { await loop.ConfigureAwait(false); } catch { /* loop never faults by design */ } }
+        lock (_gate)
+        {
+            // The loop may have replaced the client between our snapshot and its cancellation.
+            if (_client is not null && !ReferenceEquals(_client, client)) DisposeClient(_client);
+            _client = null;
+        }
         if (client is not null)
         {
             try
@@ -318,7 +323,6 @@ public sealed class MqttTagSource : ITagSource
         }
         cts?.Dispose();
         SetState(ConnectionState.Disabled, null);
-        lock (_gate) _stopped = true;
     }
 
     public async ValueTask DisposeAsync()
@@ -334,6 +338,12 @@ public sealed class MqttTagSource : ITagSource
     private static void DisposeClient(IMqttClient? c)
     {
         try { c?.Dispose(); } catch { /* ignore */ }
+    }
+
+    private static string GenerateClientId(string connectionId)
+    {
+        var id = $"twinlabs-{connectionId}-{Guid.NewGuid().ToString("N")[..12]}";
+        return id.Length <= 64 ? id : id[^64..];
     }
 
     private static TaskCompletionSource NewTcs() => new(TaskCreationOptions.RunContinuationsAsynchronously);
