@@ -1,0 +1,13 @@
+{
+  "type": "connection",
+  "t": 761300,
+  "seq": 3810,
+  "data": {
+    "id": "plc1",
+    "kind": "opcua",
+    "endpoint": "opc.tcp://localhost:4840/twinlabs",
+    "status": "connected",
+    "boundTags": 98,
+    "lastValueMs": 761300
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "type": "kpi",
+  "t": 3600000,
+  "seq": 5001,
+  "data": {
+    "simTimeMs": 3600000,
+    "line": {
+      "oee": 0.64,
+      "availability": 0.93,
+      "performance": 0.78,
+      "quality": 0.88,
+      "throughputPerHour": 98.2,
+      "wip": 14,
+      "good": 98,
+      "scrap": 9,
+      "bottleneckAssetId": "CNC-01"
+    },
+    "assets": [],
+    "lines": [
+      {
+        "lineId": "line-a",
+        "kpi": {
+          "oee": 0.7,
+          "availability": 0.95,
+          "performance": 0.8,
+          "quality": 0.92,
+          "throughputPerHour": 60.1,
+          "wip": 8,
+          "good": 60,
+          "scrap": 4,
+          "bottleneckAssetId": "CNC-01"
+        }
+      },
+      {
+        "lineId": "line-b",
+        "kpi": {
+          "oee": 0.55,
+          "availability": 0.9,
+          "performance": 0.74,
+          "quality": 0.83,
+          "throughputPerHour": 38.1,
+          "wip": 6,
+          "good": 38,
+          "scrap": 5,
+          "bottleneckAssetId": "ASSY-02"
+        }
+      }
+    ],
+    "resources": [
+      {
+        "resourceId": "op-pool",
+        "count": 2,
+        "utilization": 0.81,
+        "waitSeconds": 412.5
+      }
+    ]
+  }
+}

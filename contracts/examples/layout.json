@@ -1,0 +1,54 @@
+{
+  "id": "d2e9",
+  "name": "Cell 1 draft",
+  "updatedAtUtc": "2026-10-07T10:00:00Z",
+  "plant": {
+    "id": "cell-1",
+    "name": "Cell 1 (draft)",
+    "version": 1,
+    "seed": 1,
+    "assets": [
+      {
+        "id": "SRC-01",
+        "name": "Feeder",
+        "kind": "source",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotationY": 0,
+        "size": {
+          "x": 1.6,
+          "y": 1.4,
+          "z": 1.6
+        },
+        "downstream": [
+          "SNK-01"
+        ],
+        "params": {
+          "arrivalIntervalS": 30
+        }
+      },
+      {
+        "id": "SNK-01",
+        "name": "Dock",
+        "kind": "sink",
+        "position": {
+          "x": 6,
+          "y": 0,
+          "z": 0
+        },
+        "rotationY": 0,
+        "size": {
+          "x": 1.6,
+          "y": 1,
+          "z": 1.6
+        },
+        "downstream": [],
+        "params": {}
+      }
+    ],
+    "sensors": []
+  }
+}

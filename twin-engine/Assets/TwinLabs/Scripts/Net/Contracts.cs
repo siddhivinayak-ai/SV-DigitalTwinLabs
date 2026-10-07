@@ -29,7 +29,9 @@ namespace TwinLabs.Unity
 
     public enum EventKind { State, Alarm, Command, Info }
 
-    public enum AlarmSource { Limit, Anomaly, Fault }
+    public enum AlarmSource { Limit, Anomaly, Fault, Deviation }
+
+    public enum TwinMode { Simulate, Shadow }
 
     // ------------------------------------------------------------------ constants
 
@@ -159,6 +161,7 @@ namespace TwinLabs.Unity
         public long SimTimeMs;
         public long Tick;
         public int Seed;
+        public TwinMode Mode;
     }
 
     [Serializable]

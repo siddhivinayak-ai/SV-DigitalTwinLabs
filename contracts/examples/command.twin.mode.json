@@ -1,0 +1,10 @@
+{
+  "type": "command",
+  "t": 0,
+  "seq": 9,
+  "data": {
+    "id": "c-0009",
+    "action": "twin.mode",
+    "value": 1
+  }
+}

@@ -2,13 +2,23 @@
   <Folder Name="/src/">
     <Project Path="src/TwinLabs.Analytics/TwinLabs.Analytics.csproj" />
     <Project Path="src/TwinLabs.Api/TwinLabs.Api.csproj" />
+    <Project Path="src/TwinLabs.Connect.Mqtt/TwinLabs.Connect.Mqtt.csproj" />
+    <Project Path="src/TwinLabs.Connect.OpcUa/TwinLabs.Connect.OpcUa.csproj" />
+    <Project Path="src/TwinLabs.Connect/TwinLabs.Connect.csproj" />
     <Project Path="src/TwinLabs.Core/TwinLabs.Core.csproj" />
+    <Project Path="src/TwinLabs.Persistence/TwinLabs.Persistence.csproj" />
     <Project Path="src/TwinLabs.Simulation/TwinLabs.Simulation.csproj" />
+    <Project Path="src/TwinLabs.VirtualPlc/TwinLabs.VirtualPlc.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TwinLabs.Analytics.Tests/TwinLabs.Analytics.Tests.csproj" />
     <Project Path="tests/TwinLabs.Api.Tests/TwinLabs.Api.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Connect.Mqtt.Tests/TwinLabs.Connect.Mqtt.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Connect.OpcUa.Tests/TwinLabs.Connect.OpcUa.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Connect.Tests/TwinLabs.Connect.Tests.csproj" />
     <Project Path="tests/TwinLabs.Contracts.Tests/TwinLabs.Contracts.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Persistence.Tests/TwinLabs.Persistence.Tests.csproj" />
     <Project Path="tests/TwinLabs.Simulation.Tests/TwinLabs.Simulation.Tests.csproj" />
+    <Project Path="tests/TwinLabs.VirtualPlc.Tests/TwinLabs.VirtualPlc.Tests.csproj" />
   </Folder>
 </Solution>

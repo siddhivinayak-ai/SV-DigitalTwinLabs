@@ -11,7 +11,7 @@ namespace TwinLabs.Api.Hosting;
 /// <see cref="IAnomalyDetector"/>. Every access goes through one lock. REST endpoints, the WebSocket hub and the
 /// <see cref="SimulationLoop"/> all call in here; the loop drives time via <see cref="Advance"/>.
 /// </summary>
-public sealed class SimulationHost
+public sealed partial class SimulationHost
 {
     public const double MinSpeed = 0.25;
     public const double MaxSpeed = 100;

@@ -8,9 +8,24 @@ public enum Severity { Info, Warning, Critical }
 
 public enum EventKind { State, Alarm, Command, Info }
 
-public enum AlarmSource { Limit, Anomaly, Fault }
+public enum AlarmSource { Limit, Anomaly, Fault, Deviation }
 
-public sealed record SimStatus(SimRunState State, double Speed, long SimTimeMs, long Tick, int Seed);
+/// <summary>v0.2: simulate = the engine drives state; shadow = external tags drive state and the engine predicts.</summary>
+public enum TwinMode { Simulate, Shadow }
+
+public enum ConnectionState { Disabled, Connecting, Connected, Error }
+
+public sealed record SimStatus(SimRunState State, double Speed, long SimTimeMs, long Tick, int Seed, TwinMode Mode = TwinMode.Simulate);
+
+/// <summary>v0.2: live status of one external connection.</summary>
+public sealed record ConnectionStatus(
+    string Id,
+    ConnectionKind Kind,
+    string Endpoint,
+    ConnectionState Status,
+    int BoundTags,
+    long? LastValueMs = null,
+    string? Error = null);
 
 /// <summary>Live state of one asset.</summary>
 /// <param name="Load">0..1 utilisation of the asset right now (drives power/temperature).</param>
@@ -132,7 +147,23 @@ public sealed record LineKpi(
     long Scrap,
     string? BottleneckAssetId);
 
-public sealed record KpiReport(long SimTimeMs, LineKpi Line, IReadOnlyList<AssetKpi> Assets);
+/// <summary>v0.3: KPIs of one <see cref="LineDef"/> (assets whose LineId matches).</summary>
+public sealed record LineKpiEntry(string LineId, LineKpi Kpi);
+
+/// <summary>v0.3: shared-resource usage. Utilization = busy unit-seconds / (Count × elapsed seconds).</summary>
+public sealed record ResourceKpi(string ResourceId, int Count, double Utilization, double WaitSeconds);
+
+/// <summary>Cumulative engine counters for a shared resource (v0.3).</summary>
+public sealed record ResourceStats(string ResourceId, int Count, double BusySeconds, double WaitSeconds);
+
+/// <param name="Lines">Per-line KPIs when the plant defines lines (v0.3); omitted otherwise.</param>
+/// <param name="Resources">Resource utilization when the plant defines resources (v0.3); omitted otherwise.</param>
+public sealed record KpiReport(
+    long SimTimeMs,
+    LineKpi Line,
+    IReadOnlyList<AssetKpi> Assets,
+    IReadOnlyList<LineKpiEntry>? Lines = null,
+    IReadOnlyList<ResourceKpi>? Resources = null);
 
 /// <summary>Columnar series, ready for uPlot: <c>T</c> = sim ms, <c>V</c> = values.</summary>
 public sealed record HistorySeries(string SensorId, string Unit, IReadOnlyList<long> T, IReadOnlyList<double> V);

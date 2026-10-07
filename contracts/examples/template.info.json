@@ -1,0 +1,11 @@
+{
+  "id": "machining-cell",
+  "name": "Machining cell",
+  "description": "Two CNC mills fed by a robot, with inspection.",
+  "assetCount": 9,
+  "tags": [
+    "machining",
+    "robot",
+    "starter"
+  ]
+}

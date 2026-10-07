@@ -1,0 +1,136 @@
+{
+  "id": "two-lines",
+  "name": "Two lines (example)",
+  "version": 1,
+  "seed": 3,
+  "assets": [
+    {
+      "id": "SRC-A",
+      "name": "Feeder A",
+      "kind": "source",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": -4
+      },
+      "rotationY": 0,
+      "size": {
+        "x": 1.6,
+        "y": 1.4,
+        "z": 1.6
+      },
+      "downstream": [
+        "CNC-A"
+      ],
+      "params": {
+        "arrivalIntervalS": 30
+      },
+      "lineId": "line-a"
+    },
+    {
+      "id": "CNC-A",
+      "name": "Mill A",
+      "kind": "machine",
+      "position": {
+        "x": 5,
+        "y": 0,
+        "z": -4
+      },
+      "rotationY": 90,
+      "size": {
+        "x": 3,
+        "y": 2.4,
+        "z": 2.2
+      },
+      "downstream": [
+        "SNK"
+      ],
+      "params": {
+        "cycleTimeS": 40,
+        "mtbfS": 21600,
+        "mttrS": 420
+      },
+      "lineId": "line-a",
+      "resourceId": "op-pool",
+      "shiftId": "day",
+      "mesh": "/api/meshes/a41b7e/file"
+    },
+    {
+      "id": "SRC-B",
+      "name": "Feeder B",
+      "kind": "source",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 4
+      },
+      "rotationY": 0,
+      "size": {
+        "x": 1.6,
+        "y": 1.4,
+        "z": 1.6
+      },
+      "downstream": [
+        "SNK"
+      ],
+      "params": {
+        "arrivalIntervalS": 45
+      },
+      "lineId": "line-b"
+    },
+    {
+      "id": "SNK",
+      "name": "Dock",
+      "kind": "sink",
+      "position": {
+        "x": 10,
+        "y": 0,
+        "z": 0
+      },
+      "rotationY": 0,
+      "size": {
+        "x": 1.6,
+        "y": 1,
+        "z": 1.6
+      },
+      "downstream": [],
+      "params": {}
+    }
+  ],
+  "sensors": [],
+  "lines": [
+    {
+      "id": "line-a",
+      "name": "Line A"
+    },
+    {
+      "id": "line-b",
+      "name": "Line B"
+    }
+  ],
+  "resources": [
+    {
+      "id": "op-pool",
+      "name": "Operators",
+      "kind": "operator",
+      "count": 2
+    }
+  ],
+  "calendar": {
+    "startHourOfDay": 6,
+    "shifts": [
+      {
+        "id": "day",
+        "name": "Day shift",
+        "startHour": 6,
+        "endHour": 14
+      },
+      {
+        "id": "night",
+        "name": "Night shift",
+        "startHour": 22,
+        "endHour": 6
+      }
+    ]
+  }
+}

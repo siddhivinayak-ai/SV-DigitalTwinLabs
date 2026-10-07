@@ -33,7 +33,7 @@
         { "id": "SNK-01.good", "assetId": "SNK-01", "kind": "count", "unit": "pcs", "noise": 0 }
       ]
     },
-    "sim": { "state": "stopped", "speed": 1, "simTimeMs": 0, "tick": 0, "seed": 7 },
+    "sim": { "state": "stopped", "speed": 1, "simTimeMs": 0, "tick": 0, "seed": 7, "mode": "simulate" },
     "assets": [
       { "id": "SRC-01", "state": "idle", "stateSinceMs": 0, "load": 0, "wear": 0, "wip": 0, "good": 0, "scrap": 0, "cycleProgress": 0 },
       { "id": "CNC-01", "state": "idle", "stateSinceMs": 0, "load": 0, "wear": 0, "wip": 0, "good": 0, "scrap": 0, "cycleProgress": 0 },

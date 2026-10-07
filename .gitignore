@@ -32,3 +32,6 @@ twin-engine/.vsconfig
 Thumbs.db
 .idea/
 *.swp
+
+# alt build output (dotnet --artifacts-path .artifacts)
+.artifacts/

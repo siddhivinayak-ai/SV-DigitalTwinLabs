@@ -1,0 +1,18 @@
+{
+  "id": "6f1c2d9a",
+  "name": "Bigger buffer + faster assembly",
+  "createdAtUtc": "2026-10-07T09:30:00Z",
+  "request": {
+    "durationS": 28800,
+    "overrides": [
+      {
+        "assetId": "BUF-01",
+        "params": {
+          "capacity": 30
+        }
+      }
+    ],
+    "seed": 42,
+    "fromLive": true
+  }
+}

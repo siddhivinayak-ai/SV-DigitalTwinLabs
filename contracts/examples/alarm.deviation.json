@@ -1,0 +1,18 @@
+{
+  "type": "alarm",
+  "t": 802400,
+  "seq": 4120,
+  "data": {
+    "id": "ALM-CNC-01.temp-deviation",
+    "source": "deviation",
+    "severity": "warning",
+    "assetId": "CNC-01",
+    "message": "CNC-01.temp deviates from prediction: actual 71.8 °C, predicted 63.4 °C",
+    "raisedAtMs": 802400,
+    "active": true,
+    "acknowledged": false,
+    "sensorId": "CNC-01.temp",
+    "value": 71.8,
+    "limit": 63.4
+  }
+}

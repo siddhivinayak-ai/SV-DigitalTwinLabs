@@ -31,5 +31,6 @@ export function describeCommand(cmd: Omit<CommandData, 'id'>): string {
     case 'asset.maintenance': return `${cmd.value ? 'Begin' : 'End'} maintenance on ${cmd.assetId}`;
     case 'asset.enable': return `${cmd.value ? 'Enable' : 'Disable'} ${cmd.assetId}`;
     case 'alarm.ack': return `Acknowledge ${cmd.alarmId}`;
+    case 'twin.mode': return cmd.value ? 'Switch to shadow mode' : 'Switch to simulate mode';
   }
 }

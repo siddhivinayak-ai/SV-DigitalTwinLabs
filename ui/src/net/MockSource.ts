@@ -39,7 +39,7 @@ export class MockSource implements TwinSource {
   readonly kind = 'mock' as const;
   private plant: PlantModel = structuredClone(samplePlant as unknown as PlantModel);
   private assets = new Map<string, MAsset>();
-  private sim: SimStatus = { state: 'running', speed: 10, simTimeMs: 0, tick: 0, seed: this.plant.seed };
+  private sim: SimStatus = { state: 'running', speed: 10, simTimeMs: 0, tick: 0, seed: this.plant.seed, mode: 'simulate' };
   private seq = 0;
   private partSeq = 0;
   private eventSeq = 0;
