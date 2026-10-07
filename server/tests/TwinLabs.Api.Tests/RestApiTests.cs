@@ -53,7 +53,7 @@ public class RestApiTests
     {
         await using var f = new TwinApiFactory();
         var json = await GetJson(f.CreateClient(), "/api/state");
-        var example = ContractShape.Example("snapshot.json")["data"]!;
+        var example = ContractShape.SnapshotDataExample();
         ContractShape.AssertKnownFields(example, json);
         ContractShape.AssertSameFields(example["sim"], json["sim"], "sim");
         Assert.Equal("stopped", (string?)json["sim"]!["state"]);

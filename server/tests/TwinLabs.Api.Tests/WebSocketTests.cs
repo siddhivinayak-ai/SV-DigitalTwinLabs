@@ -26,7 +26,7 @@ public class WebSocketTests
         AssertEnvelope(first);
         Assert.Equal("snapshot", (string?)first["type"]);
         Assert.Equal(1, (long)first["seq"]!);
-        ContractShape.AssertKnownFields(ContractShape.Example("snapshot.json")["data"], first["data"]);
+        ContractShape.AssertKnownFields(ContractShape.SnapshotDataExample(), first["data"]);
 
         var frames = new List<JsonObject> { first };
         var ticks = new List<JsonObject>();
