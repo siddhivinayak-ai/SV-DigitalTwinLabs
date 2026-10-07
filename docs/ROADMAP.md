@@ -23,7 +23,7 @@ V1 is the **base**: one engine, one wire contract and several clients. Every lat
 - [x] Analytics: OEE (A×P×Q), bottleneck detection, ISA-18.2 style limit, anomaly and fault alarms, and a what-if runner.
 - [x] ASP.NET Core API: the REST and WebSocket contract, a real-time loop from ×0.25 to ×100, history and CSV export.
 - [x] Unity 6 client: procedural plant, live state, on-screen controls.
-- [~] Web console in a WinForms/MATLAB style: 3D viewport, trends, KPIs, property grid, alarms and what-if (being finalised).
+- [x] Web console in a WinForms/MATLAB style: 3D viewport, trends, KPIs, property grid, alarms and what-if.
 - [x] CI, Docker image, dev and smoke scripts.
 
 ## v0.2 — Connected Twin (real data in)
