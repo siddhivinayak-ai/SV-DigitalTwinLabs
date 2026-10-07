@@ -1,0 +1,17 @@
+{
+  "ok": false,
+  "issues": [
+    {
+      "severity": "critical",
+      "code": "NO_SINK_REACHABLE",
+      "message": "Asset 'CNC-03' has no path to a sink",
+      "assetId": "CNC-03"
+    },
+    {
+      "severity": "warning",
+      "code": "UNUSED_SENSOR_LIMIT",
+      "message": "Sensor 'CNC-01.temp' has hiHi below hi",
+      "assetId": "CNC-01"
+    }
+  ]
+}

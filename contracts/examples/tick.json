@@ -3,7 +3,7 @@
   "t": 761300,
   "seq": 3807,
   "data": {
-    "sim": { "state": "running", "speed": 10, "simTimeMs": 761300, "tick": 7613, "seed": 42 },
+    "sim": { "state": "running", "speed": 10, "simTimeMs": 761300, "tick": 7613, "seed": 42, "mode": "simulate" },
     "assets": [
       { "id": "CONV-01", "state": "running", "stateSinceMs": 742100, "load": 0.5, "wear": 0, "wip": 3, "good": 31, "scrap": 0, "cycleProgress": 0 },
       { "id": "CNC-01", "state": "running", "stateSinceMs": 739000, "load": 1, "wear": 0.1057, "wip": 1, "good": 14, "scrap": 1, "cycleProgress": 0.446 },

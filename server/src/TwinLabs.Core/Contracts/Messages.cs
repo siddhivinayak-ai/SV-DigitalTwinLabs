@@ -13,6 +13,8 @@ public static class MessageTypes
     public const string Kpi = "kpi";
     public const string Params = "params";
     public const string Ack = "ack";
+    /// <summary>v0.2: <see cref="ConnectionStatus"/>, sent whenever a connection changes.</summary>
+    public const string Connection = "connection";
 
     // client -> server
     public const string Command = "command";
@@ -27,7 +29,8 @@ public sealed record SnapshotData(
     IReadOnlyList<PartPosition> Parts,
     KpiReport? Kpi,
     IReadOnlyList<Alarm> Alarms,
-    IReadOnlyList<EventRecord> Events);
+    IReadOnlyList<EventRecord> Events,
+    IReadOnlyList<ConnectionStatus>? Connections = null);
 
 /// <summary>~5 Hz stream of live state.</summary>
 public sealed record TickData(
@@ -67,6 +70,8 @@ public static class CommandActions
     /// <summary>AssetId + Value 1 = enable, 0 = switch off.</summary>
     public const string AssetEnable = "asset.enable";
     public const string AlarmAck = "alarm.ack";
+    /// <summary>v0.2: Value 0 = simulate, 1 = shadow.</summary>
+    public const string TwinMode = "twin.mode";
 }
 
 public sealed record AckData(string CommandId, bool Ok, string? Error = null);
@@ -101,3 +106,27 @@ public sealed record ParamsRequest(IReadOnlyDictionary<string, double> Params);
 public sealed record FaultRequest(double? DurationS = null);
 public sealed record ToggleRequest(bool On);
 public sealed record HealthData(string Status, string Version);
+
+// ---- v0.2: connections, scenarios, history ----
+
+public sealed record TwinModeRequest(TwinMode Mode);
+
+public sealed record SaveScenarioRequest(string Name, WhatIfRequest Request, WhatIfResult? Result = null);
+public sealed record ScenarioSummary(string Id, string Name, string CreatedAtUtc, double DurationS, int Overrides);
+public sealed record Scenario(string Id, string Name, string CreatedAtUtc, WhatIfRequest Request, WhatIfResult? Result);
+
+// ---- v0.3: plant editing, layouts, templates, meshes ----
+
+public sealed record ValidationIssue(Severity Severity, string Code, string Message, string? AssetId = null);
+
+/// <summary>Ok = no issues of severity critical. Warnings do not block <c>PUT /api/plant</c>.</summary>
+public sealed record ValidationResult(bool Ok, IReadOnlyList<ValidationIssue> Issues);
+
+public sealed record TemplateInfo(string Id, string Name, string Description, int AssetCount, IReadOnlyList<string> Tags);
+
+public sealed record SaveLayoutRequest(string Name, PlantModel Plant);
+public sealed record LayoutSummary(string Id, string Name, string UpdatedAtUtc, int AssetCount);
+public sealed record Layout(string Id, string Name, string UpdatedAtUtc, PlantModel Plant);
+
+/// <param name="Url">Server-relative URL of the glTF/GLB file; this is the value to put in <see cref="AssetDef.Mesh"/>.</param>
+public sealed record MeshInfo(string Id, string Name, string Url, long SizeBytes);

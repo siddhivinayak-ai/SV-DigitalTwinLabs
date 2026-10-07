@@ -2,6 +2,7 @@ using TwinLabs.Api.Endpoints;
 using TwinLabs.Api.Hosting;
 using TwinLabs.Api.Realtime;
 using TwinLabs.Core;
+using TwinLabs.Persistence;
 
 const string DevCors = "dev";
 
@@ -10,6 +11,8 @@ builder.Services.ConfigureHttpJsonOptions(o => TwinJson.Configure(o.SerializerOp
 builder.Services.AddProblemDetails();
 builder.Services.AddCors(o => o.AddPolicy(DevCors, p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 builder.Services.AddTwinLabs(builder.Configuration);
+builder.Services.AddTwinConnectivity();
+builder.Services.AddTwinPersistence(builder.Configuration);
 
 var app = builder.Build();
 
@@ -34,6 +37,9 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapTwinApi();
+app.MapPlantEndpoints();
+app.MapConnectionEndpoints();
+app.MapPersistenceEndpoints();
 app.MapTwinHub("/ws");
 app.MapSpaFallback();
 

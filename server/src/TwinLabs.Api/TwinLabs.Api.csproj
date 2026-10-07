@@ -4,6 +4,11 @@
     <ProjectReference Include="..\TwinLabs.Core\TwinLabs.Core.csproj" />
     <ProjectReference Include="..\TwinLabs.Simulation\TwinLabs.Simulation.csproj" />
     <ProjectReference Include="..\TwinLabs.Analytics\TwinLabs.Analytics.csproj" />
+    <ProjectReference Include="..\TwinLabs.Connect\TwinLabs.Connect.csproj" />
+    <ProjectReference Include="..\TwinLabs.Connect.OpcUa\TwinLabs.Connect.OpcUa.csproj" />
+    <ProjectReference Include="..\TwinLabs.Connect.Mqtt\TwinLabs.Connect.Mqtt.csproj" />
+    <ProjectReference Include="..\TwinLabs.VirtualPlc\TwinLabs.VirtualPlc.csproj" />
+    <ProjectReference Include="..\TwinLabs.Persistence\TwinLabs.Persistence.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -14,8 +19,7 @@
 
   <ItemGroup>
     <!-- Published builds find the plant at plant/sample_line.json next to the dll (see PlantLocator). -->
-    <None Include="..\..\..\contracts\plant\sample_line.json" Link="plant\sample_line.json"
-          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\..\contracts\plant\sample_line.json" Link="plant\sample_line.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

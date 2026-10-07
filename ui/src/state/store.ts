@@ -1,5 +1,5 @@
 import type {
-  AckData, Alarm, AssetDef, AssetState, EventRecord, KpiReport, ParamsData, PartPosition,
+  AckData, Alarm, AssetDef, ConnectionStatus, AssetState, EventRecord, KpiReport, ParamsData, PartPosition,
   PlantModel, SensorDef, ServerMessage, SimStatus, SnapshotData, TickData,
 } from '../net/contracts';
 
@@ -16,6 +16,8 @@ export interface StoreEvents {
   ack: AckData;
   selection: string | null;
   connection: ConnectionState;
+  /** v0.2: an external (OPC UA / MQTT) connection changed. */
+  connectionStatus: ConnectionStatus;
   theme: Theme;
 }
 
@@ -33,12 +35,14 @@ const EVENTS_CAP = 500;
  */
 export class TwinStore {
   plant: PlantModel | null = null;
-  sim: SimStatus = { state: 'stopped', speed: 1, simTimeMs: 0, tick: 0, seed: 0 };
+  sim: SimStatus = { state: 'stopped', speed: 1, simTimeMs: 0, tick: 0, seed: 0, mode: 'simulate' };
   readonly assets = new Map<string, AssetState>();
   readonly sensors = new Map<string, number>();
   parts: PartPosition[] = [];
   kpi: KpiReport | null = null;
   readonly alarms = new Map<string, Alarm>();
+  /** v0.2: external connections by id. */
+  readonly connections = new Map<string, ConnectionStatus>();
   events: EventRecord[] = [];
   selection: string | null = null;
   connection: ConnectionState = 'disconnected';
@@ -79,6 +83,9 @@ export class TwinStore {
         return this.emit('params', msg.data);
       }
       case 'ack': return this.emit('ack', msg.data);
+      case 'connection':
+        this.connections.set(msg.data.id, msg.data);
+        return this.emit('connectionStatus', msg.data);
     }
   }
 
@@ -95,6 +102,8 @@ export class TwinStore {
     this.alarms.clear();
     for (const a of s.alarms) if (a.active) this.alarms.set(a.id, a);
     this.events = [...s.events];
+    this.connections.clear();
+    for (const c of s.connections ?? []) this.connections.set(c.id, c);
     if (this.selection && !this.assetDef(this.selection)) this.selection = null;
     this.emit('snapshot', s);
   }
