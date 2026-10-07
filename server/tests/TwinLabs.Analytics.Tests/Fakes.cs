@@ -16,6 +16,9 @@ public sealed class FakeEngine(PlantModel plant, int seed = 42) : ISimulationEng
     public List<AssetStats> Stats { get; set; } = [];
     public List<AssetState> States { get; set; } = [];
     public List<SensorValue> Sensors { get; set; } = [];
+    /// <summary>Scripted v0.3 resource counters returned by GetResourceStats.</summary>
+    public List<ResourceStats> ResourceStats { get; set; } = [];
+    public int ResourceStatsCalls { get; private set; }
 
     /// <summary>Called after every Advance/Step with the new time, to script stats over time.</summary>
     public Action<FakeEngine>? OnAdvance { get; set; }
@@ -46,6 +49,7 @@ public sealed class FakeEngine(PlantModel plant, int seed = 42) : ISimulationEng
     public IReadOnlyList<SensorValue> GetSensorValues() => Sensors;
     public IReadOnlyList<PartPosition> GetParts() => [];
     public IReadOnlyList<AssetStats> GetAssetStats() => Stats;
+    public IReadOnlyList<ResourceStats> GetResourceStats() { ResourceStatsCalls++; return ResourceStats; }
     public IReadOnlyList<EventRecord> DrainEvents() => [];
 
     public AssetDef UpdateParams(string assetId, IReadOnlyDictionary<string, double> changes)
