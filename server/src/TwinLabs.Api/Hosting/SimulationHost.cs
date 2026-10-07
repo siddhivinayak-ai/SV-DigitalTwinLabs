@@ -83,6 +83,7 @@ public sealed partial class SimulationHost
         _state = o.AutoStart ? SimRunState.Running : SimRunState.Stopped;
         _lastTickTs = _lastKpiTs = time.GetTimestamp();
 
+        InitShadow(o); // v0.2 shadow-mode hook
         lock (_gate) ResetLocked($"Simulation initialised (seed {_seed})");
     }
 
@@ -96,9 +97,9 @@ public sealed partial class SimulationHost
 
     public SnapshotData GetSnapshot() { lock (_gate) return SnapshotLocked(); }
 
-    public KpiReport GetKpi() { lock (_gate) return _lastKpi = _kpi.Compute(_engine); }
+    public KpiReport GetKpi() { lock (_gate) return _lastKpi = _kpi.Compute(KpiEngineLocked()); }
 
-    public IReadOnlyList<Alarm> GetActiveAlarms() { lock (_gate) return [.. _detector.Active]; }
+    public IReadOnlyList<Alarm> GetActiveAlarms() { lock (_gate) return ActiveAlarmsLocked(); }
 
     public IReadOnlyList<EventRecord> GetEvents(int limit)
     {
@@ -174,6 +175,7 @@ public sealed partial class SimulationHost
     {
         if (!double.IsFinite(speed) || speed <= 0)
             throw new ArgumentException($"Speed must be a positive number ({MinSpeed}..{MaxSpeed}), got {Num(speed)}");
+        RejectSpeedInShadowLocked();
         _speed = ClampSpeed(speed);
         return StatusLocked();
     });
@@ -231,7 +233,7 @@ public sealed partial class SimulationHost
     public Alarm AcknowledgeAlarm(string alarmId) => Command(CommandActions.AlarmAck, null, alarmId, () =>
     {
         if (string.IsNullOrWhiteSpace(alarmId)) throw new ArgumentException("alarmId is required");
-        var alarm = _detector.Acknowledge(alarmId) ?? throw TwinErrors.UnknownAlarm(alarmId);
+        var alarm = _detector.Acknowledge(alarmId) ?? AcknowledgeDeviationLocked(alarmId) ?? throw TwinErrors.UnknownAlarm(alarmId);
         PublishAlarmLocked(alarm);
         return alarm;
     });
@@ -255,6 +257,7 @@ public sealed partial class SimulationHost
                 case CommandActions.AssetMaintenance: SetMaintenance(RequireId(cmd), Toggle(cmd)); break;
                 case CommandActions.AssetEnable: SetEnabled(RequireId(cmd), Toggle(cmd)); break;
                 case CommandActions.AlarmAck: AcknowledgeAlarm(cmd.AlarmId ?? throw new ArgumentException("alarm.ack requires 'alarmId'")); break;
+                case CommandActions.TwinMode: SetMode(ParseMode(cmd)); break;
                 default: throw new ArgumentException($"Unknown action '{cmd.Action}'");
             }
             return new AckData(id, true);
@@ -342,6 +345,7 @@ public sealed partial class SimulationHost
     {
         lock (_gate)
         {
+            ApplyTagUpdatesLocked();
             if (_state == SimRunState.Running && wallDelta > TimeSpan.Zero)
             {
                 var dt = _engine.Dt;
@@ -370,12 +374,12 @@ public sealed partial class SimulationHost
             {
                 _lastTickTs = now;
                 if (_clients.Count > 0)
-                    BroadcastLocked(MessageTypes.Tick, new TickData(StatusLocked(), _engine.GetAssetStates(), _engine.GetSensorValues(), _engine.GetParts()));
+                    BroadcastLocked(MessageTypes.Tick, TickLocked());
             }
             if (now - _lastKpiTs >= _kpiIntervalTs)
             {
                 _lastKpiTs = now;
-                _lastKpi = _kpi.Compute(_engine);
+                _lastKpi = _kpi.Compute(KpiEngineLocked());
                 BroadcastLocked(MessageTypes.Kpi, _lastKpi);
             }
         }
@@ -418,6 +422,7 @@ public sealed partial class SimulationHost
         _lastKpi = null;
         _history.Record(_engine.SimTimeMs, _engine.GetSensorValues());
         _lastSampleSecond = _engine.SimTimeMs / 1000;
+        ResetShadowLocked();
         AddEventLocked(EventKind.Info, Severity.Info, message);
     }
 
@@ -428,16 +433,19 @@ public sealed partial class SimulationHost
         if (sec <= _lastSampleSecond) return;
         _lastSampleSecond = sec;
 
-        var sensors = _engine.GetSensorValues();
+        var sensors = TwinSensorsLocked();
         _history.Record(t, sensors);
         DrainEngineEventsLocked(); // keep fault events ahead of the alarms they cause
-        foreach (var alarm in _detector.Observe(t, sensors, _engine.GetAssetStates()))
+        var assets = TwinAssetsLocked();
+        foreach (var alarm in _detector.Observe(t, sensors, assets))
             PublishAlarmLocked(alarm);
+        OnSimSecondLocked(t, assets, sensors);
     }
 
     private void PublishAlarmLocked(Alarm alarm)
     {
         BroadcastLocked(MessageTypes.Alarm, alarm);
+        ForwardAlarmLocked(alarm);
         var (severity, prefix) = alarm switch
         {
             { Active: false } => (Severity.Info, "CLEARED "),
@@ -449,7 +457,8 @@ public sealed partial class SimulationHost
 
     private void DrainEngineEventsLocked()
     {
-        foreach (var e in _engine.DrainEvents()) PushEventLocked(e);
+        foreach (var e in _engine.DrainEvents())
+            if (KeepEngineEventLocked(e)) PushEventLocked(e);
     }
 
     private void AddEventLocked(EventKind kind, Severity severity, string message, string? assetId = null) =>
@@ -462,6 +471,7 @@ public sealed partial class SimulationHost
         _events.Enqueue(rec);
         while (_events.Count > MaxEvents) _events.Dequeue();
         BroadcastLocked(MessageTypes.Event, rec);
+        ForwardEventLocked(rec);
     }
 
     private void BroadcastLocked<T>(string type, T data)
@@ -470,17 +480,18 @@ public sealed partial class SimulationHost
         _clients.Broadcast(Frame.Create(type, _engine.SimTimeMs, data));
     }
 
-    private SimStatus StatusLocked() => new(_state, _speed, _engine.SimTimeMs, _engine.Tick, _engine.Seed);
+    private SimStatus StatusLocked() => new(_state, _speed, _engine.SimTimeMs, _engine.Tick, _engine.Seed, _mode);
 
     private SnapshotData SnapshotLocked() => new(
         ClonePlant(_engine.Plant),
         StatusLocked(),
-        _engine.GetAssetStates(),
-        _engine.GetSensorValues(),
+        TwinAssetsLocked(),
+        TwinSensorsLocked(),
         _engine.GetParts(),
         _lastKpi,
-        [.. _detector.Active],
-        [.. _events.Skip(Math.Max(0, _events.Count - SnapshotEvents))]);
+        ActiveAlarmsLocked(),
+        [.. _events.Skip(Math.Max(0, _events.Count - SnapshotEvents))],
+        ConnectionsSnapshot());
 
     private AssetState AssetStateLocked(string assetId) =>
         _engine.GetAssetStates().FirstOrDefault(a => a.Id == assetId) ?? throw TwinErrors.UnknownAsset(assetId);
