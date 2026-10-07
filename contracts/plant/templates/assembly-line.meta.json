@@ -1,0 +1,4 @@
+{
+  "description": "Three manual assembly stations in series with WIP buffers, an end-of-line functional test and packing, split into sub-assembly and final-assembly lines. The stations work the 06-14 day shift. Teaches buffering, serial bottlenecks and shift calendars.",
+  "tags": ["assembly", "shifts", "multi-line", "intermediate"]
+}
