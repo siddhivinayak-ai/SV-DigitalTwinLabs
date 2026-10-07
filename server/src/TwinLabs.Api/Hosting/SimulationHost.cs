@@ -21,18 +21,18 @@ public sealed partial class SimulationHost
     public static readonly TimeSpan LoopInterval = TimeSpan.FromMilliseconds(50);
 
     private readonly Lock _gate = new();
-    private readonly ISimulationEngine _engine;
-    private readonly IKpiCalculator _kpi;
-    private readonly IAnomalyDetector _detector;
+    private ISimulationEngine _engine;
+    private IKpiCalculator _kpi;
+    private IAnomalyDetector _detector;
     private readonly IWhatIfRunner _whatIf;
     private readonly ClientRegistry _clients;
     private readonly TimeProvider _time;
     private readonly ILogger<SimulationHost> _log;
 
-    private readonly PlantModel _originalPlant;
-    private readonly HashSet<string> _assetIds;
-    private readonly int _seed;
-    private readonly SensorHistory _history;
+    private PlantModel _originalPlant;
+    private HashSet<string> _assetIds;
+    private int _seed;
+    private SensorHistory _history;
     private readonly Queue<EventRecord> _events = new();
     private readonly int _maxTicksPerWake;
     private readonly long _tickIntervalTs;
@@ -63,6 +63,7 @@ public sealed partial class SimulationHost
         _kpi = kpi;
         _detector = detector;
         _whatIf = whatIf;
+        _factory = factory;
         _clients = clients;
         _time = time;
         _log = log;
