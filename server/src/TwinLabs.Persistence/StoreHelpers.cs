@@ -62,11 +62,11 @@ internal static class StoreHelpers
     public static string MeshUrl(string id) => $"/api/meshes/{id}/file";
 
     /// <summary>Runs <paramref name="insert"/> with fresh ids until it does not collide with an existing primary key.</summary>
-    public static string InsertWithNewId(Action<string> insert)
+    public static string InsertWithNewId(Action<string> insert, string? firstId = null)
     {
         for (var attempt = 0; ; attempt++)
         {
-            var id = NewId();
+            var id = attempt == 0 && firstId is not null ? firstId : NewId();
             try
             {
                 insert(id);
