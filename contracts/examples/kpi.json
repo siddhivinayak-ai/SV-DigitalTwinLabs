@@ -1,0 +1,32 @@
+{
+  "type": "kpi",
+  "t": 761000,
+  "seq": 3805,
+  "data": {
+    "simTimeMs": 761000,
+    "line": {
+      "oee": 0.712,
+      "availability": 0.934,
+      "performance": 0.861,
+      "quality": 0.885,
+      "throughputPerHour": 132.4,
+      "wip": 17,
+      "good": 23,
+      "scrap": 3,
+      "bottleneckAssetId": "ASSY-01"
+    },
+    "assets": [
+      {
+        "assetId": "ASSY-01",
+        "oee": 0.802,
+        "availability": 0.951,
+        "performance": 0.874,
+        "quality": 0.965,
+        "utilization": 0.913,
+        "good": 27,
+        "scrap": 1,
+        "states": { "off": 0, "idle": 0.002, "running": 0.862, "starved": 0.061, "blocked": 0.024, "fault": 0.051, "maintenance": 0 }
+      }
+    ]
+  }
+}

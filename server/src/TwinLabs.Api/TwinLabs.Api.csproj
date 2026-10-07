@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TwinLabs.Core\TwinLabs.Core.csproj" />
+    <ProjectReference Include="..\TwinLabs.Simulation\TwinLabs.Simulation.csproj" />
+    <ProjectReference Include="..\TwinLabs.Analytics\TwinLabs.Analytics.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Published builds find the plant at plant/sample_line.json next to the dll (see PlantLocator). -->
+    <None Include="..\..\..\contracts\plant\sample_line.json" Link="plant\sample_line.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="TwinLabs.Api.Tests" />
+  </ItemGroup>
+
+</Project>

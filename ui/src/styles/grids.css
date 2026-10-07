@@ -1,0 +1,233 @@
+/* Data-dense views: DataGrid, TreeView, PropertyGrid. 18px rows. */
+
+/* ---------- DataGrid ---------- */
+.dgrid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-field);
+  outline: none;
+}
+.dgrid.framed {
+  border: 1px solid;
+  border-color: var(--c-shadow) var(--c-hilite) var(--c-hilite) var(--c-shadow);
+}
+.dgrid-head {
+  flex: none;
+  height: 19px;
+  overflow: hidden;
+  background: var(--c-face);
+  border-bottom: 1px solid var(--c-dark);
+}
+.dgrid-head-inner { display: flex; height: 100%; }
+.dgrid-hcell {
+  position: relative;
+  flex: none;
+  display: flex; align-items: center; gap: 3px;
+  height: 18px;
+  padding: 0 4px;
+  border-right: 1px solid var(--c-dark);
+  box-shadow: inset 1px 1px 0 var(--c-hilite), inset -1px 0 0 var(--c-shadow);
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: default;
+}
+.dgrid-hcell.right { justify-content: flex-end; }
+.dgrid-hcell.center { justify-content: center; }
+.dgrid-hcell:active:not(.nosort) { box-shadow: inset 1px 1px 0 var(--c-shadow); padding-top: 1px; }
+.dgrid-hcell .sort { width: 7px; height: 4px; fill: var(--c-shadow); flex: none; }
+.dgrid-hcell .htext { overflow: hidden; text-overflow: ellipsis; }
+.dgrid-hcell .resizer { position: absolute; top: 0; right: -3px; width: 6px; bottom: 0; cursor: col-resize; z-index: 1; }
+.dgrid-hfill { flex: 1; box-shadow: inset 1px 1px 0 var(--c-hilite); }
+
+.dgrid-body { flex: 1; min-height: 0; overflow: auto; position: relative; }
+.dgrid-spacer { position: relative; }
+.dgrid-row {
+  position: absolute;
+  left: 0;
+  display: flex;
+  height: var(--row-h);
+  line-height: calc(var(--row-h) - 1px);
+  border-bottom: 1px solid transparent;
+  white-space: nowrap;
+}
+.dgrid-row.alt { background: var(--c-field-alt); }
+.dgrid-row.sel { background: var(--c-select); color: var(--c-select-text); }
+.dgrid:not(:focus-within) .dgrid-row.sel { background: var(--c-select-soft); color: var(--c-text); }
+.dgrid-row.focus::after { content: ""; position: absolute; inset: 0; outline: 1px dotted var(--c-text); outline-offset: -1px; pointer-events: none; }
+.dgrid-cell {
+  flex: none;
+  padding: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid var(--c-field-alt);
+  display: flex; align-items: center; gap: 4px;
+}
+.dgrid-row.alt .dgrid-cell { border-right-color: var(--c-field); }
+.dgrid-cell > .ct { overflow: hidden; text-overflow: ellipsis; }
+.dgrid-cell.right { justify-content: flex-end; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.dgrid-cell.center { justify-content: center; }
+.dgrid-cell.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.dgrid-cell svg { width: 14px; height: 14px; flex: none; }
+.dgrid-empty { position: absolute; left: 0; right: 0; top: 24px; text-align: center; color: var(--c-text-dim); pointer-events: none; }
+
+/* Abnormal row/cell emphasis */
+.dgrid-row .tx-fault { color: var(--s-fault); font-weight: bold; }
+.dgrid-row .tx-warn { color: var(--c-text); background: color-mix(in srgb, var(--sev-warning) 30%, transparent); }
+.dgrid-row.sel .tx-fault { color: inherit; }
+.dgrid-row.unack .sevchip { animation: blink-sev 1s steps(1) infinite; }
+.dgrid-row.unack { font-weight: bold; }
+.dgrid-row.unack .sevchip { font-weight: bold; }
+.dgrid-row .sevchip {
+  display: inline-block; min-width: 54px; padding: 0 4px; line-height: 13px; text-align: center;
+  border: 1px solid var(--c-dark); font-size: var(--fs-small); font-weight: bold; letter-spacing: 0.3px;
+}
+.dgrid-row .sevchip.sev-critical { background: var(--sev-critical); color: var(--c-select-text); }
+.dgrid-row .sevchip.sev-warning { background: var(--sev-warning); color: #000; }
+.dgrid-row .sevchip.sev-info { background: var(--c-face); color: var(--c-text); }
+.dgrid-row .bar {
+  position: relative; display: inline-block; width: 44px; height: 9px; flex: none;
+  background: var(--c-field); border: 1px solid var(--c-border);
+}
+.dgrid-row .bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c-shadow); }
+.dgrid-row .bar.warn > i { background: var(--sev-warning); }
+.dgrid-row .bar.bad > i { background: var(--sev-critical); }
+
+/* ---------- TreeView ---------- */
+.tree {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  background: var(--c-field);
+  padding: 2px 0;
+  outline: none;
+}
+.tree-row {
+  display: flex; align-items: center;
+  width: max-content;
+  min-width: 100%;
+  height: var(--row-h);
+  padding-right: 6px;
+  white-space: nowrap;
+  cursor: default;
+}
+.tree-row .tw {
+  width: 16px; height: 16px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.tree-row .tw.lines::before { /* dotted connector */
+  content: ""; position: absolute; left: 7px; top: -1px; bottom: -1px;
+  border-left: 1px dotted var(--c-border);
+}
+.tree-row .tw .box {
+  position: relative; z-index: 1;
+  width: 9px; height: 9px;
+  background: var(--c-field);
+  border: 1px solid var(--c-border);
+  display: flex; align-items: center; justify-content: center;
+}
+.tree-row .tw .box::before { content: ""; position: absolute; width: 5px; height: 1px; background: var(--c-text); }
+.tree-row .tw .box.plus::after { content: ""; position: absolute; width: 1px; height: 5px; background: var(--c-text); }
+.tree-row .ticon { width: 16px; height: 16px; flex: none; margin-right: 3px; display: flex; }
+.tree-row .ticon svg { width: 16px; height: 16px; }
+.tree-row .led { margin-right: 4px; }
+.tree-row .tlabel { padding: 0 3px; line-height: 15px; border: 1px solid transparent; }
+.tree-row .tmeta { margin-left: 4px; color: var(--c-text-dim); }
+.tree-row .tmeta.v { margin-left: 8px; color: var(--c-text); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.tree-row .tmeta.abn-hi { color: var(--c-text); background: color-mix(in srgb, var(--sev-warning) 35%, transparent); padding: 0 2px; }
+.tree-row .tmeta.abn-hihi { color: var(--c-select-text); background: var(--sev-critical); padding: 0 2px; }
+.tree-row.sel .tlabel { background: var(--c-select-soft); }
+.tree:focus .tree-row.sel .tlabel { background: var(--c-select); color: var(--c-select-text); }
+.tree:focus .tree-row.focus .tlabel { border: 1px dotted var(--c-text); }
+.tree:focus .tree-row.sel.focus .tlabel { border-color: var(--c-select-soft); }
+.tree-row.group .tlabel { color: var(--c-text); }
+.tree-row.root .tlabel { font-weight: bold; }
+
+/* ---------- PropertyGrid (MATLAB Property Inspector / WinForms PropertyGrid) ---------- */
+.pgrid {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--c-field);
+  --pg-split: 46%;
+}
+.pg-cat {
+  display: flex; align-items: center;
+  height: var(--row-h);
+  background: var(--c-face);
+  font-weight: bold;
+  border-bottom: 1px solid var(--c-field);
+  cursor: default;
+}
+.pg-cat .tw { width: 16px; display: flex; justify-content: center; }
+.pg-cat .tw .box {
+  position: relative; width: 9px; height: 9px; background: var(--c-field); border: 1px solid var(--c-border);
+  display: flex; align-items: center; justify-content: center;
+}
+.pg-cat .tw .box::before { content: ""; position: absolute; width: 5px; height: 1px; background: var(--c-text); }
+.pg-cat .tw .box.plus::after { content: ""; position: absolute; width: 1px; height: 5px; background: var(--c-text); }
+.pg-row {
+  display: grid;
+  grid-template-columns: 16px var(--pg-split) 1fr;
+  height: var(--row-h);
+  border-bottom: 1px solid var(--c-face);
+}
+.pg-row > .gutter { background: var(--c-face); }
+.pg-row > .pg-key {
+  padding: 0 4px;
+  line-height: 17px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-right: 1px solid var(--c-face);
+}
+.pg-row > .pg-val {
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 4px;
+  min-width: 0;
+  white-space: nowrap; overflow: hidden;
+}
+.pg-row.sel > .pg-key { background: var(--c-select); color: var(--c-select-text); }
+.pg-val .v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pg-val .v.n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.pg-val .u { flex: none; width: 34px; color: var(--c-text-dim); font-size: var(--fs-small); }
+.pg-val .v.readonly-text { color: var(--c-text); }
+.pg-row.ro .pg-key { color: var(--c-text-dim); }
+.pg-row.editable .pg-key { color: var(--c-text); }
+.pg-val input.pg-edit {
+  flex: 1; min-width: 0; height: 15px;
+  border: 0; padding: 0 1px;
+  background: transparent;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  text-align: right;
+  outline: none;
+  color: var(--c-text);
+}
+.pg-row.editable .pg-val { background: var(--c-field); }
+.pg-row.editable .pg-val:focus-within { box-shadow: inset 0 0 0 1px var(--c-select); }
+.pg-row.dirty .pg-edit { font-weight: bold; }
+.pg-row.pending .pg-edit { color: var(--c-text-dim); font-style: italic; }
+.pg-row.err .pg-val { box-shadow: inset 0 0 0 1px var(--sev-critical); }
+.pg-row.ok .pg-val { animation: pg-ok 1.2s ease-out; }
+@keyframes pg-ok { from { background: color-mix(in srgb, var(--s-running) 40%, var(--c-field)); } to { background: var(--c-field); } }
+.pg-val .v.val-hi, .pg-val .v.val-hihi { padding: 0 2px; }
+.pg-val .meter {
+  flex: none; width: 46px; height: 9px; position: relative;
+  border: 1px solid var(--c-border); background: var(--c-field);
+}
+.pg-val .meter > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c-shadow); }
+.pg-val .meter.warn > i { background: var(--sev-warning); }
+.pg-val .meter.bad > i { background: var(--sev-critical); }
+.pg-val .meter.run > i { background: var(--s-running); }
+
+.pg-desc {
+  flex: none;
+  height: 54px;
+  padding: 3px 5px;
+  line-height: 1.35;
+  background: var(--c-face);
+  border-top: 1px solid var(--c-shadow);
+  overflow: hidden;
+}
+.pg-desc b { display: block; }

@@ -1,0 +1,28 @@
+{
+  "type": "tick",
+  "t": 761300,
+  "seq": 3807,
+  "data": {
+    "sim": { "state": "running", "speed": 10, "simTimeMs": 761300, "tick": 7613, "seed": 42 },
+    "assets": [
+      { "id": "CONV-01", "state": "running", "stateSinceMs": 742100, "load": 0.5, "wear": 0, "wip": 3, "good": 31, "scrap": 0, "cycleProgress": 0 },
+      { "id": "CNC-01", "state": "running", "stateSinceMs": 739000, "load": 1, "wear": 0.1057, "wip": 1, "good": 14, "scrap": 1, "cycleProgress": 0.446 },
+      { "id": "CNC-02", "state": "fault", "stateSinceMs": 755800, "load": 0, "wear": 0.0412, "wip": 1, "good": 13, "scrap": 0, "cycleProgress": 0.12 },
+      { "id": "BUF-01", "state": "starved", "stateSinceMs": 760000, "load": 0, "wear": 0, "wip": 0, "good": 27, "scrap": 0, "cycleProgress": 0 }
+    ],
+    "sensors": [
+      { "id": "CNC-01.temp", "v": 58.41 },
+      { "id": "CNC-01.vib", "v": 1.83 },
+      { "id": "CNC-01.power", "v": 17.62 },
+      { "id": "CNC-02.vib", "v": 0.31 },
+      { "id": "BUF-01.level", "v": 0 }
+    ],
+    "parts": [
+      { "id": 29, "assetId": "CONV-01", "progress": 0.81 },
+      { "id": 30, "assetId": "CONV-01", "progress": 0.43 },
+      { "id": 31, "assetId": "CONV-01", "progress": 0.06 },
+      { "id": 27, "assetId": "CNC-01", "progress": 0.446 },
+      { "id": 28, "assetId": "CNC-02", "progress": 0.12 }
+    ]
+  }
+}

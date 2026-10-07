@@ -1,0 +1,117 @@
+{
+  "id": "line-a",
+  "name": "Line A - Precision Machined Housing",
+  "version": 1,
+  "seed": 42,
+  "assets": [
+    {
+      "id": "SRC-01", "name": "Raw Stock Feeder", "kind": "source",
+      "position": { "x": 0, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 1.6, "y": 1.4, "z": 1.6 },
+      "downstream": ["CONV-01"],
+      "params": { "arrivalIntervalS": 22, "arrivalStdS": 2 }
+    },
+    {
+      "id": "CONV-01", "name": "Infeed Conveyor", "kind": "conveyor",
+      "position": { "x": 5.5, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 8, "y": 0.9, "z": 0.8 },
+      "downstream": ["CNC-01", "CNC-02"],
+      "params": { "lengthM": 8, "speedMps": 0.25, "capacity": 6, "ratedKw": 1.5, "idleKw": 0.2 }
+    },
+    {
+      "id": "CNC-01", "name": "5-Axis CNC Mill #1", "kind": "machine",
+      "position": { "x": 12, "y": 0, "z": -2.2 }, "rotationY": 0, "size": { "x": 3, "y": 2.4, "z": 2.2 },
+      "downstream": ["BUF-01"],
+      "params": { "cycleTimeS": 50, "cycleTimeStdS": 3, "mtbfS": 21600, "mttrS": 420, "scrapRate": 0.02, "ratedKw": 18, "idleKw": 3, "ambientC": 24, "tempRiseC": 38, "vibBaselineMms": 1.2 }
+    },
+    {
+      "id": "CNC-02", "name": "5-Axis CNC Mill #2", "kind": "machine",
+      "position": { "x": 12, "y": 0, "z": 2.2 }, "rotationY": 0, "size": { "x": 3, "y": 2.4, "z": 2.2 },
+      "downstream": ["BUF-01"],
+      "params": { "cycleTimeS": 50, "cycleTimeStdS": 3, "mtbfS": 21600, "mttrS": 420, "scrapRate": 0.02, "ratedKw": 18, "idleKw": 3, "ambientC": 24, "tempRiseC": 38, "vibBaselineMms": 1.2 }
+    },
+    {
+      "id": "BUF-01", "name": "WIP Buffer", "kind": "buffer",
+      "position": { "x": 16, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 1.8, "y": 1.2, "z": 1.2 },
+      "downstream": ["ROB-01"],
+      "params": { "capacity": 10 }
+    },
+    {
+      "id": "ROB-01", "name": "6-Axis Transfer Robot", "kind": "robot",
+      "position": { "x": 19.5, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 1.2, "y": 2, "z": 1.2 },
+      "downstream": ["ASSY-01"],
+      "params": { "cycleTimeS": 16, "cycleTimeStdS": 1, "mtbfS": 14400, "mttrS": 300, "scrapRate": 0.002, "ratedKw": 4, "idleKw": 0.8, "ambientC": 24, "tempRiseC": 18, "vibBaselineMms": 0.6 }
+    },
+    {
+      "id": "ASSY-01", "name": "Press-Fit Assembly Cell", "kind": "machine",
+      "position": { "x": 23.5, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 3, "y": 1.8, "z": 2 },
+      "downstream": ["CONV-02"],
+      "params": { "cycleTimeS": 24, "cycleTimeStdS": 2, "mtbfS": 14400, "mttrS": 360, "scrapRate": 0.01, "ratedKw": 7, "idleKw": 1.2, "ambientC": 24, "tempRiseC": 22, "vibBaselineMms": 0.9 }
+    },
+    {
+      "id": "CONV-02", "name": "Outfeed Conveyor", "kind": "conveyor",
+      "position": { "x": 29, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 6, "y": 0.9, "z": 0.8 },
+      "downstream": ["QC-01"],
+      "params": { "lengthM": 6, "speedMps": 0.3, "capacity": 5, "ratedKw": 1.2, "idleKw": 0.2 }
+    },
+    {
+      "id": "QC-01", "name": "Vision Inspection", "kind": "inspection",
+      "position": { "x": 34, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 2, "y": 2.2, "z": 1.8 },
+      "downstream": ["PACK-01"],
+      "params": { "cycleTimeS": 12, "cycleTimeStdS": 0.5, "mtbfS": 28800, "mttrS": 240, "scrapRate": 0.03, "ratedKw": 1.5, "idleKw": 0.6, "ambientC": 24, "tempRiseC": 10, "vibBaselineMms": 0.2 }
+    },
+    {
+      "id": "PACK-01", "name": "Packaging Station", "kind": "machine",
+      "position": { "x": 37.5, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 2.4, "y": 2, "z": 2 },
+      "downstream": ["SNK-01"],
+      "params": { "cycleTimeS": 15, "cycleTimeStdS": 1, "mtbfS": 10800, "mttrS": 360, "scrapRate": 0.001, "ratedKw": 5, "idleKw": 1, "ambientC": 24, "tempRiseC": 15, "vibBaselineMms": 0.8 }
+    },
+    {
+      "id": "SNK-01", "name": "Finished Goods Dock", "kind": "sink",
+      "position": { "x": 41, "y": 0, "z": 0 }, "rotationY": 0, "size": { "x": 1.6, "y": 1, "z": 1.6 },
+      "downstream": [],
+      "params": {}
+    }
+  ],
+  "sensors": [
+    { "id": "CONV-01.speed", "assetId": "CONV-01", "kind": "speed", "unit": "m/s", "noise": 0.005 },
+    { "id": "CONV-01.level", "assetId": "CONV-01", "kind": "level", "unit": "pcs", "noise": 0 },
+    { "id": "CONV-01.power", "assetId": "CONV-01", "kind": "power", "unit": "kW", "noise": 0.02 },
+
+    { "id": "CNC-01.temp", "assetId": "CNC-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 70, "hiHi": 80 },
+    { "id": "CNC-01.vib", "assetId": "CNC-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1 },
+    { "id": "CNC-01.power", "assetId": "CNC-01", "kind": "power", "unit": "kW", "noise": 0.02 },
+    { "id": "CNC-01.current", "assetId": "CNC-01", "kind": "current", "unit": "A", "noise": 0.02, "hi": 32 },
+
+    { "id": "CNC-02.temp", "assetId": "CNC-02", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 70, "hiHi": 80 },
+    { "id": "CNC-02.vib", "assetId": "CNC-02", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1 },
+    { "id": "CNC-02.power", "assetId": "CNC-02", "kind": "power", "unit": "kW", "noise": 0.02 },
+    { "id": "CNC-02.current", "assetId": "CNC-02", "kind": "current", "unit": "A", "noise": 0.02, "hi": 32 },
+
+    { "id": "BUF-01.level", "assetId": "BUF-01", "kind": "level", "unit": "pcs", "noise": 0, "hi": 9 },
+
+    { "id": "ROB-01.temp", "assetId": "ROB-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 55, "hiHi": 65 },
+    { "id": "ROB-01.vib", "assetId": "ROB-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 2.8, "hiHi": 4.5 },
+    { "id": "ROB-01.power", "assetId": "ROB-01", "kind": "power", "unit": "kW", "noise": 0.02 },
+    { "id": "ROB-01.current", "assetId": "ROB-01", "kind": "current", "unit": "A", "noise": 0.02 },
+
+    { "id": "ASSY-01.temp", "assetId": "ASSY-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 58, "hiHi": 68 },
+    { "id": "ASSY-01.vib", "assetId": "ASSY-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1 },
+    { "id": "ASSY-01.power", "assetId": "ASSY-01", "kind": "power", "unit": "kW", "noise": 0.02 },
+    { "id": "ASSY-01.current", "assetId": "ASSY-01", "kind": "current", "unit": "A", "noise": 0.02 },
+
+    { "id": "CONV-02.speed", "assetId": "CONV-02", "kind": "speed", "unit": "m/s", "noise": 0.005 },
+    { "id": "CONV-02.level", "assetId": "CONV-02", "kind": "level", "unit": "pcs", "noise": 0 },
+    { "id": "CONV-02.power", "assetId": "CONV-02", "kind": "power", "unit": "kW", "noise": 0.02 },
+
+    { "id": "QC-01.temp", "assetId": "QC-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 45, "hiHi": 55 },
+    { "id": "QC-01.vib", "assetId": "QC-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 1.8, "hiHi": 2.8 },
+    { "id": "QC-01.power", "assetId": "QC-01", "kind": "power", "unit": "kW", "noise": 0.02 },
+    { "id": "QC-01.rejects", "assetId": "QC-01", "kind": "count", "unit": "pcs", "noise": 0 },
+
+    { "id": "PACK-01.temp", "assetId": "PACK-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 50, "hiHi": 60 },
+    { "id": "PACK-01.vib", "assetId": "PACK-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1 },
+    { "id": "PACK-01.power", "assetId": "PACK-01", "kind": "power", "unit": "kW", "noise": 0.02 },
+    { "id": "PACK-01.current", "assetId": "PACK-01", "kind": "current", "unit": "A", "noise": 0.02 },
+
+    { "id": "SNK-01.good", "assetId": "SNK-01", "kind": "count", "unit": "pcs", "noise": 0 }
+  ]
+}

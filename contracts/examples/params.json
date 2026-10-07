@@ -1,0 +1,9 @@
+{
+  "type": "params",
+  "t": 780000,
+  "seq": 3901,
+  "data": {
+    "assetId": "BUF-01",
+    "params": { "capacity": 30 }
+  }
+}

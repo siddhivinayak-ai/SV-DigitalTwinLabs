@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TwinLabs.Analytics/TwinLabs.Analytics.csproj" />
+    <Project Path="src/TwinLabs.Api/TwinLabs.Api.csproj" />
+    <Project Path="src/TwinLabs.Core/TwinLabs.Core.csproj" />
+    <Project Path="src/TwinLabs.Simulation/TwinLabs.Simulation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TwinLabs.Analytics.Tests/TwinLabs.Analytics.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Api.Tests/TwinLabs.Api.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Contracts.Tests/TwinLabs.Contracts.Tests.csproj" />
+    <Project Path="tests/TwinLabs.Simulation.Tests/TwinLabs.Simulation.Tests.csproj" />
+  </Folder>
+</Solution>
