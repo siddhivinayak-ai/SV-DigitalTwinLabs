@@ -96,7 +96,7 @@ public static class PlantValidator
                 if (!IsValidId(id))
                 {
                     Crit(C.BadId, string.IsNullOrEmpty(id)
-                        ? $"A {what} has an empty id"
+                        ? $"Empty {what} id"
                         : $"The {what} id '{id}' has characters outside A-Za-z0-9._-", string.IsNullOrEmpty(id) ? null : assetId);
                     if (string.IsNullOrEmpty(id)) continue;
                 }
