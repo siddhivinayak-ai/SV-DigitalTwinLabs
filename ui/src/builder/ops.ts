@@ -115,6 +115,16 @@ export function disconnect(p: PlantModel, from: string, to: string): OpResult {
   a.downstream = a.downstream.filter((d) => d !== to);
 }
 
+/** Replace an asset's downstream list (property grid "Downstream" text). Unknown ids are kept for the validator. */
+export function setDownstream(p: PlantModel, id: string, list: string[]): OpResult {
+  const a = find(p, id);
+  if (!a) return `Unknown asset ${id}`;
+  const clean = [...new Set(list.map((s) => s.trim()).filter(Boolean))];
+  if (clean.includes(id)) return 'An asset cannot feed itself';
+  if (a.kind === 'sink' && clean.length) return `${id} is a sink and cannot have downstream`;
+  a.downstream = clean;
+}
+
 /** Remove every flow into and out of the given assets. */
 export function disconnectAll(p: PlantModel, ids: string[]): OpResult {
   const set = new Set(ids);
