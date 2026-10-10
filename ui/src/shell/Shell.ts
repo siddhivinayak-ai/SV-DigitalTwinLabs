@@ -27,6 +27,7 @@ import { createDataGridPanel } from '../panels/DataGridPanel';
 import { createViewportPanel } from '../viewport/ViewportPanel';
 import { createTrendsPanel } from '../panels/TrendsPanel';
 import { createKpiPanel } from '../panels/KpiPanel';
+import { connectionsTab, registerConnectionsUi, type ConnectionsUi } from '../connections/register'; // v0.2 ui-connections
 
 export const THEME_KEY = 'svdtl.theme';
 
@@ -46,6 +47,7 @@ export class Shell {
   private readonly dock: DockLayout;
   private readonly infoHost: HTMLDivElement;
   private infobar: HTMLDivElement | null = null;
+  private conn!: ConnectionsUi; // v0.2 ui-connections
 
   constructor(private readonly ctx: PanelContext, private readonly opt: ShellOptions) {
     const { store, source } = ctx;
@@ -77,6 +79,7 @@ export class Shell {
           { id: 'events', label: 'Event Log', icon: 'info', panel: panel(createEventLogPanel) },
           { id: 'alarms', label: 'Alarms', icon: 'warning', panel: panel(createAlarmsPanel) },
           { id: 'grid', label: 'Data Grid', icon: 'count', panel: panel(createDataGridPanel) },
+          connectionsTab(ctx), // v0.2 ui-connections
         ],
       },
       rightTop: { title: 'Properties', icon: 'layout', panel: panel(createPropertiesPanel) },
@@ -85,6 +88,7 @@ export class Shell {
     this.status = new StatusBar(store);
     this.status.connDetail = opt.connDetail ?? null;
     this.status.onAlarmClick(() => this.dock.showTab('alarms'));
+    this.conn = registerConnectionsUi(ctx, { toolStrip: this.tool.el, statusBar: this.status.el, showTab: (id) => this.dock.showTab(id), activeTab: () => (this.dock.isVisible('bottom') ? this.dock.tabs.active : null) }); // v0.2 ui-connections
 
     this.el.append(menu.el, this.tool.el, this.infoHost, this.dock.el, this.status.el);
 
@@ -250,6 +254,7 @@ export class Shell {
           tab('&Event Log', 'events'),
           tab('&Alarms', 'alarms'),
           tab('&Data Grid', 'grid'),
+          ...this.conn.menus.view, // v0.2 ui-connections
           'sep',
           {
             label: 'T&heme', submenu: [
@@ -271,7 +276,7 @@ export class Shell {
           { label: '&Reset', accel: 'Ctrl+Shift+R', disabled: () => !online(), action: () => this.cmd('reset') },
           'sep',
           {
-            label: 'Spee&d', disabled: () => !online(),
+            label: 'Spee&d', disabled: () => !online() || store.sim.mode === 'shadow', // v0.2 ui-connections: no speed in shadow
             submenu: () => SPEEDS.map((s) => ({
               label: formatSpeed(s), radio: true, checked: store.sim.speed === s,
               action: () => void runCommand(source, { action: 'sim.speed', value: s }),
@@ -282,12 +287,14 @@ export class Shell {
           { label: '&Clear Fault', disabled: () => sel()?.state !== 'fault', action: () => this.selectedAction('asset.clearFault') },
           { label: '&Maintenance', checked: () => sel()?.state === 'maintenance', disabled: () => !sel(), action: () => this.selectedAction('asset.maintenance') },
           { label: '&Enabled', checked: () => !!sel() && sel()!.state !== 'off', disabled: () => !sel(), action: () => this.selectedAction('asset.enable') },
+          ...this.conn.menus.simulation, // v0.2 ui-connections
         ],
       },
       {
         label: '&Analysis',
         items: (): MenuEntry[] => [
           { label: '&What-If Scenario…', accel: accelText('whatIf'), disabled: () => !online() || !store.plant, action: () => this.cmd('whatIf') },
+          ...this.conn.menus.analysis, // v0.2 ui-connections
           'sep',
           { label: 'Go to &Bottleneck', disabled: () => !store.kpi?.line.bottleneckAssetId, action: () => store.select(store.kpi!.line.bottleneckAssetId!) },
           { label: 'Show &Alarms', action: () => this.dock.showTab('alarms') },

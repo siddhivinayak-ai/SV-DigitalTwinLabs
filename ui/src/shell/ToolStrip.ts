@@ -70,7 +70,7 @@ export class ToolStrip {
     this.btnFault.disabled = !online || !hasPlant;
     this.btnWhatIf.disabled = !online || !hasPlant;
     this.btnExport.disabled = !hasPlant;
-    this.speed.setDisabled(!online);
+    this.speed.setDisabled(!online || this.store.sim.mode === 'shadow'); // v0.2 ui-connections: reality sets the pace in shadow
     if (this.speed.value !== this.store.sim.speed) this.speed.setValue(this.store.sim.speed, true);
     const sel = this.store.selection;
     const def = sel ? this.store.assetDef(sel) : undefined;
