@@ -159,7 +159,12 @@ public sealed class PublisherPump(IEnumerable<ITwinPublisher> publishers, ILogge
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !_ct.IsCancellationRequested)
             {
-                _log.LogError(ex, "Publisher '{Name}' {What} failed", SafeName(_p), what);
+                // e.g. the virtual PLC's StartAsync throws when its port is in use: log, keep the host running.
+                try { _log.LogError(ex, "Publisher '{Name}' {What} failed", SafeName(_p), what); } catch { }
+                return false;
+            }
+            catch (OperationCanceledException)
+            {
                 return false;
             }
         }
@@ -172,7 +177,7 @@ public sealed class PublisherPump(IEnumerable<ITwinPublisher> publishers, ILogge
                 _suppressed++;
                 return;
             }
-            _log.LogError(ex, "Publisher '{Name}' Publish failed ({Suppressed} similar errors suppressed)", SafeName(_p), _suppressed);
+            try { _log.LogError(ex, "Publisher '{Name}' Publish failed ({Suppressed} similar errors suppressed)", SafeName(_p), _suppressed); } catch { }
             _lastErrorLog = now;
             _suppressed = 0;
         }
@@ -186,7 +191,11 @@ public sealed class PublisherPump(IEnumerable<ITwinPublisher> publishers, ILogge
             }
             catch (TimeoutException)
             {
-                _log.LogWarning("Publisher '{Name}' did not drain within {Timeout}", SafeName(_p), timeout);
+                try { _log.LogWarning("Publisher '{Name}' did not drain within {Timeout}", SafeName(_p), timeout); } catch { }
+            }
+            catch (Exception)
+            {
+                // the loop never faults by design
             }
             if (_started) await Guard("StopAsync", () => _p.StopAsync());
         }

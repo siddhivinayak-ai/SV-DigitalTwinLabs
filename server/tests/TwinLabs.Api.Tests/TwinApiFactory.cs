@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using TwinLabs.Api.Hosting;
 using TwinLabs.Core;
+using TwinLabs.Core.Contracts;
 
 namespace TwinLabs.Api.Tests;
 
@@ -25,6 +26,19 @@ public sealed class TwinApiFactory : WebApplicationFactory<Program>
     public FakeAnomalyDetector Detector { get; } = new();
     public FakeWhatIfRunner WhatIf { get; } = new();
 
+    // v0.2 connectivity fakes (the real factories/publishers are always replaced).
+    /// <summary>Plant file; null = the default sample line. See <see cref="ConnectedPlant"/>.</summary>
+    public string? PlantPath { get; init; }
+    public string? Mode { get; init; }
+    public FakeTagSourceFactory OpcUa { get; } = new(ConnectionKind.Opcua);
+    public FakeTagSourceFactory Mqtt { get; } = new(ConnectionKind.Mqtt);
+    public List<FakePublisher> Publishers { get; init; } = [];
+    public List<IHostEventSink> Sinks { get; init; } = [];
+
+    public static string ConnectedPlant => Path.Combine(ContractShape.ContractsDir, "plant", "sample_line.connected.json");
+
+    public ConnectionManager Connections => Services.GetRequiredService<ConnectionManager>();
+
     public SimulationHost Host => Services.GetRequiredService<SimulationHost>();
     public FakeEngine Engine => Engines.Last;
 
@@ -33,6 +47,8 @@ public sealed class TwinApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         builder.UseSetting("Twin:AutoStart", "false");
         builder.UseSetting("Twin:TickHz", TickHz.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (PlantPath is not null) builder.UseSetting("Twin:PlantPath", PlantPath);
+        if (Mode is not null) builder.UseSetting("Twin:Mode", Mode);
         builder.ConfigureServices(s =>
         {
             s.RemoveAll<ISimulationEngineFactory>();
@@ -43,6 +59,14 @@ public sealed class TwinApiFactory : WebApplicationFactory<Program>
             s.AddSingleton<IKpiCalculator>(Kpi);
             s.AddSingleton<IAnomalyDetector>(Detector);
             s.AddSingleton<IWhatIfRunner>(WhatIf);
+
+            s.RemoveAll<ITagSourceFactory>();
+            s.RemoveAll<ITwinPublisher>();
+            s.RemoveAll<IHostEventSink>();
+            s.AddSingleton<ITagSourceFactory>(OpcUa);
+            s.AddSingleton<ITagSourceFactory>(Mqtt);
+            foreach (var p in Publishers) s.AddSingleton<ITwinPublisher>(p);
+            foreach (var k in Sinks) s.AddSingleton<IHostEventSink>(k);
 
             if (ManualLoop)
             {

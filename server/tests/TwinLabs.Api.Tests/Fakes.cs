@@ -98,11 +98,13 @@ public sealed class FakeEngineFactory : ISimulationEngineFactory
 public sealed class FakeKpiCalculator : IKpiCalculator
 {
     public int ResetCount { get; private set; }
+    /// <summary>The engine (or shadow view) passed to the last Compute.</summary>
+    public ISimulationEngine? LastEngine { get; private set; }
 
     public static LineKpi Line(int wip = 0) => new(0.712, 0.934, 0.861, 0.885, 132.4, wip, 23, 3, "ASSY-01");
 
     public KpiReport Compute(ISimulationEngine engine) => new(
-        engine.SimTimeMs,
+        (LastEngine = engine).SimTimeMs,
         Line(engine.Wip),
         [new AssetKpi("ASSY-01", 0.802, 0.951, 0.874, 0.965, 0.913, 27, 1, new StateBreakdown(0, 0.002, 0.862, 0.061, 0.024, 0.051, 0))]);
 

@@ -29,7 +29,18 @@ public static class ContractShape
     public static JsonNode SnapshotDataExample()
     {
         var data = Example("snapshot.json")["data"]!.DeepClone();
-        data["connections"] = new JsonArray(Example("connection.json")["data"]!.DeepClone());
+        data["connections"] = new JsonArray(ConnectionDataExample());
+        return data;
+    }
+
+    /// <summary>
+    /// <c>connection.json</c> data plus <c>error</c>: <see cref="TwinLabs.Core.Contracts.ConnectionStatus.Error"/> and
+    /// docs/V0.2-ConnectedTwin.md §4 define it, but the frozen example omits it.
+    /// </summary>
+    public static JsonNode ConnectionDataExample()
+    {
+        var data = Example("connection.json")["data"]!.DeepClone();
+        data["error"] = "connect failed";
         return data;
     }
 

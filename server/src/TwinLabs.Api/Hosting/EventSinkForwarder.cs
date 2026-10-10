@@ -67,7 +67,8 @@ public sealed class EventSinkForwarder : IAsyncDisposable
                     }
                     catch (Exception ex)
                     {
-                        _log.LogError(ex, "Event sink {Sink} failed", sink.GetType().Name);
+                        // Logging can itself fail during shutdown (providers disposed); never let it fault the loop.
+                        try { _log.LogError(ex, "Event sink {Sink} failed", sink.GetType().Name); } catch { }
                     }
                 }
             }
@@ -89,7 +90,11 @@ public sealed class EventSinkForwarder : IAsyncDisposable
         }
         catch (TimeoutException)
         {
-            _log.LogWarning("Event sinks did not drain within {Timeout}", StopTimeout);
+            try { _log.LogWarning("Event sinks did not drain within {Timeout}", StopTimeout); } catch { }
+        }
+        catch (Exception)
+        {
+            // the loop never faults by design; ignore anything unexpected on shutdown
         }
         _cts.Cancel();
     }
