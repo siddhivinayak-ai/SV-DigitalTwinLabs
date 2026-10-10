@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using TwinLabs.Api.Hosting;
 using TwinLabs.Core;
 using TwinLabs.Core.Contracts;
@@ -29,10 +30,11 @@ public static class PlantEndpoints
         TemplateCatalog Catalog(HttpContext ctx) => ctx.RequestServices.GetService<TemplateCatalog>() ?? fallback.Value;
 
         var api = app.MapGroup("/api");
+        // [FromBody] is required: PlantModel is also a DI singleton (the startup plant), which minimal APIs would inject.
 
-        api.MapPost("/plant/validate", (PlantModel? plant) => TypedResults.Ok(PlantValidator.Validate(plant)));
+        api.MapPost("/plant/validate", ([FromBody] PlantModel? plant) => TypedResults.Ok(PlantValidator.Validate(plant)));
 
-        api.MapPut("/plant", (PlantModel? plant, SimulationHost host) =>
+        api.MapPut("/plant", ([FromBody] PlantModel? plant, SimulationHost host) =>
         {
             if (plant is null) return ApiEndpoints.Problem(StatusCodes.Status400BadRequest, "Bad Request", "A PlantModel body is required");
             ValidationResult result;
