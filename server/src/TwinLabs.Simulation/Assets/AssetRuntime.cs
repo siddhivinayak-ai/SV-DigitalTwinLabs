@@ -31,6 +31,8 @@ internal abstract class AssetRuntime
     public bool Enabled = true;
     public bool Maintenance;
     public bool Faulted;
+    /// <summary>v0.3: false while the asset's shift window is closed (state Off, nothing moves).</summary>
+    public bool OnShift = true;
     public long FaultTicksRemaining;
     public long FaultStartMs;
     public bool PendingRepairEvent;
@@ -53,7 +55,7 @@ internal abstract class AssetRuntime
     // ---- cached params (refreshed by LoadParams) ----
     public double MtbfS, MttrS, RatedKw, IdleKw, AmbientC, TempRiseC, VibBaselineMms;
 
-    public bool Operational => Enabled && !Maintenance && !Faulted;
+    public bool Operational => Enabled && OnShift && !Maintenance && !Faulted;
 
     public double P(string key, double fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
 
@@ -86,6 +88,7 @@ internal abstract class AssetRuntime
         FaultTicksRemaining = 0;
         FaultStartMs = 0;
         PendingRepairEvent = false;
+        OnShift = true;
         State = AssetStateKind.Idle;
         ActiveState = AssetStateKind.Idle;
         StateSinceMs = 0;

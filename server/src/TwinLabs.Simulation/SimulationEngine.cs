@@ -27,6 +27,8 @@ public sealed class SimulationEngine : ISimulationEngine
     private readonly Dictionary<string, AssetRuntime> _byId;
     private readonly SensorModel[] _sensors;
     private readonly List<EventRecord> _events = new();
+    private readonly ResourcePool[] _pools;         // plant.Resources order
+    private readonly ShiftWindow[] _shifts;         // calendar shifts that at least one asset uses
     private readonly double _tempAlpha = 1 - Math.Exp(-TickSeconds / 120.0);
 
     private long _nextEventId = 1;
@@ -77,6 +79,10 @@ public sealed class SimulationEngine : ISimulationEngine
 
         _processOrder = BuildProcessOrder(_assets);
 
+        PlantFeatureValidator.Validate(plant);
+        _pools = BuildPools(plant, _assets);
+        _shifts = BuildShifts(plant, _assets);
+
         _sensors = new SensorModel[plant.Sensors.Count];
         for (int i = 0; i < plant.Sensors.Count; i++)
         {
@@ -105,6 +111,10 @@ public sealed class SimulationEngine : ISimulationEngine
     {
         long tickStartMs = SimTimeMs;
 
+        if (_shifts.Length > 0) UpdateShifts(tickStartMs);
+        var pools = _pools;
+        for (int i = 0; i < pools.Length; i++) pools[i].Allocate();
+
         var order = _processOrder;
         for (int i = 0; i < order.Length; i++)
         {
@@ -118,7 +128,7 @@ public sealed class SimulationEngine : ISimulationEngine
                     continue;
                 }
             }
-            if (a.Enabled && !a.Maintenance) a.Step(this);
+            if (a.Enabled && a.OnShift && !a.Maintenance) a.Step(this);
         }
 
         Tick++;
@@ -201,6 +211,15 @@ public sealed class SimulationEngine : ISimulationEngine
                 t[(int)AssetStateKind.Maintenance] * TickSeconds);
             list[i] = new AssetStats(a.Id, sb, a.Total, a.Good, a.Scrap, a.IdealCycleTimeS);
         }
+        return list;
+    }
+
+    /// <summary>v0.3: cumulative busy unit-seconds and asset wait-seconds per resource, in plant order.</summary>
+    public IReadOnlyList<ResourceStats> GetResourceStats()
+    {
+        if (_pools.Length == 0) return Array.Empty<ResourceStats>();
+        var list = new ResourceStats[_pools.Length];
+        for (int i = 0; i < _pools.Length; i++) list[i] = _pools[i].ToStats();
         return list;
     }
 
@@ -341,7 +360,7 @@ public sealed class SimulationEngine : ISimulationEngine
     }
 
     private static AssetStateKind? Override(AssetRuntime a) =>
-        !a.Enabled ? AssetStateKind.Off
+        !a.Enabled || !a.OnShift ? AssetStateKind.Off
         : a.Maintenance ? AssetStateKind.Maintenance
         : a.Faulted ? AssetStateKind.Fault
         : null;
@@ -368,6 +387,16 @@ public sealed class SimulationEngine : ISimulationEngine
         _nextPartId = 1;
         Released = Consumed = Scrapped = 0;
         foreach (var a in _assets) a.ResetRuntime();
+        foreach (var p in _pools) p.Reset();
+        foreach (var s in _shifts)
+        {
+            s.Active = s.IsActiveAt(0);
+            foreach (var a in s.Assets)
+            {
+                a.OnShift = s.Active;
+                Refresh(a); // off-shift assets start Off
+            }
+        }
     }
 
     private AssetRuntime Get(string assetId)
@@ -385,6 +414,50 @@ public sealed class SimulationEngine : ISimulationEngine
     private static AssetState ToState(AssetRuntime a) =>
         new(a.Id, a.State, a.StateSinceMs, a.Load, a.Wear, a.Wip, a.Good, a.Scrap, a.CycleProgress);
 
+    /// <summary>Open or close shift windows at the start of a tick; one Info event per transition.</summary>
+    private void UpdateShifts(long tickStartMs)
+    {
+        foreach (var s in _shifts)
+        {
+            bool active = s.IsActiveAt(tickStartMs);
+            if (active == s.Active) continue;
+            s.Active = active;
+            foreach (var a in s.Assets) a.OnShift = active;
+            int n = s.Assets.Length;
+            Emit(EventKind.Info, Severity.Info,
+                 $"Shift '{s.Def.Name}' {(active ? "started" : "ended")} ({n} asset{(n == 1 ? "" : "s")})");
+        }
+    }
+
+    private static ResourcePool[] BuildPools(PlantModel plant, AssetRuntime[] assets)
+    {
+        if (plant.Resources is not { Count: > 0 } defs) return [];
+        var pools = new ResourcePool[defs.Count];
+        var byId = new Dictionary<string, ResourcePool>(StringComparer.Ordinal);
+        for (int i = 0; i < defs.Count; i++) byId[defs[i].Id] = pools[i] = new ResourcePool(defs[i]);
+        foreach (var a in assets)
+            if (a.Def.ResourceId is { } rid && a is MachineAsset m)
+                m.Pool = byId[rid];
+        return pools;
+    }
+
+    private static ShiftWindow[] BuildShifts(PlantModel plant, AssetRuntime[] assets)
+    {
+        if (plant.Calendar is not { } cal || cal.Shifts is not { Count: > 0 }) return [];
+        var list = new List<ShiftWindow>(cal.Shifts.Count);
+        foreach (var def in cal.Shifts)
+        {
+            var members = assets.Where(a => a.Def.ShiftId == def.Id).ToArray();
+            if (members.Length > 0) list.Add(new ShiftWindow(def, cal.StartHourOfDay, members));
+        }
+        return list.ToArray();
+    }
+
+    /// <summary>
+    /// The original model with live asset defs. Asset defs are only ever changed via <c>with { Params = … }</c>
+    /// and the plant via <c>with { Assets = … }</c>, so every v0.2/v0.3 field (connections, bindings, lines,
+    /// resources, calendar, lineId/resourceId/shiftId/mesh) passes through untouched.
+    /// </summary>
     private PlantModel BuildPlant()
     {
         var defs = new AssetDef[_assets.Length];

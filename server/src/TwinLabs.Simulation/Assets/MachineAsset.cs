@@ -5,6 +5,8 @@ namespace TwinLabs.Simulation;
 /// <summary>
 /// Machine / robot / inspection: one part at a time, cycle ~ Normal(cycleTimeS, cycleTimeStdS) clamped to
 /// ≥ 0.2×mean, scrap at end of cycle with <c>scrapRate</c> (or <c>rejectRate</c>), wear-driven fault hazard.
+/// v0.3: with a <see cref="Pool"/> the cycle starts only once a resource unit is granted (Starved while
+/// waiting) and the unit is released when the cycle ends (good or scrap), before any downstream wait.
 /// </summary>
 internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, index)
 {
@@ -13,6 +15,14 @@ internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, 
     private double _cycleTotal, _cycleRemaining;
     private bool _done;     // finished good part waiting for downstream
     private bool _ran;      // processed during this tick
+    private bool _hasUnit;  // holds one unit of Pool for the current cycle
+    private bool _waited;   // the pool had no unit for it this tick
+
+    /// <summary>v0.3 shared resource needed per cycle, or null.</summary>
+    public ResourcePool? Pool;
+
+    /// <summary>Has a part but no resource unit yet.</summary>
+    public bool WaitingForResource => Pool is not null && _current is not null && !_done && !_hasUnit;
 
     public override void LoadParams()
     {
@@ -22,11 +32,21 @@ internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, 
         _scrapRate = Params.TryGetValue(ParamKeys.ScrapRate, out var s) ? s : P(RejectRateKey, 0);
     }
 
+    /// <summary>Called by <see cref="ResourcePool.Allocate"/>.</summary>
+    public void Grant()
+    {
+        _hasUnit = true;
+        _waited = false;
+    }
+
+    /// <summary>Called by <see cref="ResourcePool.Allocate"/> when no unit was free this tick.</summary>
+    public void MarkWaiting() => _waited = true;
+
     public override void Step(SimulationEngine e)
     {
         const double dt = SimulationEngine.TickSeconds;
 
-        if (_current is not null && !_done)
+        if (_current is not null && !_done && (Pool is null || _hasUnit))
         {
             _ran = true;
             _cycleRemaining -= dt;
@@ -36,7 +56,7 @@ internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, 
                 double hazard = dt / MtbfS * (1 + 3 * Wear * Wear);
                 if (e.Rng.NextDouble() < hazard)
                 {
-                    // The part stays inside; the cycle resumes after the repair.
+                    // The part (and any resource unit) stays inside; the cycle resumes after the repair.
                     e.StartFault(this, null, injected: false);
                     return;
                 }
@@ -45,6 +65,11 @@ internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, 
             if (_cycleRemaining <= 1e-9)
             {
                 _cycleRemaining = 0;
+                if (_hasUnit)
+                {
+                    _hasUnit = false;
+                    Pool!.Release();
+                }
                 if (_scrapRate > 0 && e.Rng.NextDouble() < _scrapRate)
                 {
                     Scrap++;
@@ -81,12 +106,15 @@ internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, 
         _cycleTotal = SimRandom.ClampedNormal(e.Rng, _cycleMean, _cycleStd);
         _cycleRemaining = _cycleTotal;
         HasWork = true;
+        Pool?.Request(this, e.Tick);
     }
 
     public override AssetStateKind ComputeActiveState()
     {
         if (_done) return AssetStateKind.Blocked;
-        if (_ran || _current is not null) return AssetStateKind.Running;
+        if (_ran) return AssetStateKind.Running;
+        if (_waited && WaitingForResource) return AssetStateKind.Starved; // part loaded, no free resource unit
+        if (_current is not null) return AssetStateKind.Running;
         return HasWork ? AssetStateKind.Starved : AssetStateKind.Idle;
     }
 
@@ -96,6 +124,8 @@ internal sealed class MachineAsset(AssetDef def, int index) : AssetRuntime(def, 
     {
         _current = null;
         _done = false;
+        _hasUnit = false;
+        _waited = false;
         _cycleTotal = _cycleRemaining = 0;
     }
 
