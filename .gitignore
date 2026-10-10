@@ -35,3 +35,6 @@ Thumbs.db
 
 # alt build output (dotnet --artifacts-path .artifacts)
 .artifacts/
+
+# Runtime data (Twin:Data:Path: SQLite, meshes, virtual PLC PKI)
+data/
