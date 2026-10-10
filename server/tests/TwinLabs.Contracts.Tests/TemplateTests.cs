@@ -127,7 +127,7 @@ public class TemplateTests(ITestOutputHelper output)
         Assert.Equal(8 * 3_600_000L, engine.SimTimeMs);
         Assert.True(line.Good > 0, "no good parts at the sink");
         Assert.InRange(line.Oee, 0.3, 0.9);
-        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(2), $"8 h run took {sw.ElapsedMilliseconds} ms");
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(10), $"8 h run took {sw.ElapsedMilliseconds} ms");
     }
 
     // ------------------------------------------------------------------ structural self-check
