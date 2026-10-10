@@ -110,7 +110,7 @@
 /* ---------- v0.3 cues ---------- */
 .vp-labels.no-ids .vp-lbl { display: none; }
 .vp-lbl.dim { opacity: 0.55; border-style: dashed; }
-.vp-lbl.dim::after { content: "OFF SHIFT"; margin-left: 4px; color: var(--c-text-dim); font-size: 9px; }
+
 /* resource-wait glyph: sits above the id label (padding lifts it clear of the label) */
 .vp-res { padding-bottom: 19px; pointer-events: none; }
 .vp-res[hidden] { display: none; }

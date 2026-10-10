@@ -175,7 +175,7 @@ class KpiPanel implements Panel {
     // ---- v0.3: per-line and resource tables (hidden unless the report carries them)
     this.linesBox = box('Lines', 'OEE · A P Q % · pcs/h');
     const lt = el('table', 'kp-tbl kp-lines');
-    lt.innerHTML = '<colgroup><col><col style="width:62px"><col style="width:24px"><col style="width:24px"><col style="width:24px"><col style="width:34px"><col style="width:26px"><col style="width:52px"></colgroup>' +
+    lt.innerHTML = '<colgroup><col><col style="width:56px"><col style="width:22px"><col style="width:22px"><col style="width:22px"><col style="width:32px"><col style="width:24px"><col style="width:50px"></colgroup>' +
       '<thead><tr><th>Line</th><th>OEE</th><th class="r" title="Availability %">A</th><th class="r" title="Performance %">P</th><th class="r" title="Quality %">Q</th>' +
       '<th class="r" title="Throughput, pcs/h">/h</th><th class="r" title="Work in progress, pcs">WIP</th><th title="Bottleneck asset (click to select)">Bottleneck</th></tr></thead>';
     this.linesBody = el('tbody', '');
