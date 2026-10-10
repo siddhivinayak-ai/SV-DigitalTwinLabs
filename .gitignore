@@ -35,3 +35,9 @@ Thumbs.db
 
 # alt build output (dotnet --artifacts-path .artifacts)
 .artifacts/
+
+# local runtime data (SQLite, meshes, OPC UA pki)
+**/data/twinlabs.db*
+**/data/meshes/
+**/data/pki/
+server/src/TwinLabs.Api/data/
