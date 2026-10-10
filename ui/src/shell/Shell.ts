@@ -28,6 +28,7 @@ import { createViewportPanel } from '../viewport/ViewportPanel';
 import { createTrendsPanel } from '../panels/TrendsPanel';
 import { createKpiPanel } from '../panels/KpiPanel';
 import { connectionsTab, registerConnectionsUi, type ConnectionsUi } from '../connections/register'; // v0.2 ui-connections
+import { libraryMenuEntries } from '../library/register'; // v0.3 ui-library: Tools > Mesh Library
 
 export const THEME_KEY = 'svdtl.theme';
 
@@ -328,6 +329,7 @@ export class Shell {
             action: () => { for (const a of store.alarms.values()) if (!a.acknowledged) void source.command({ action: 'alarm.ack', alarmId: a.id }).catch(() => undefined); },
           },
           { label: 'Reset &Column Widths', action: () => { for (const k of ['events', 'alarms', 'assets']) storage.remove(`svdtl.grid.${k}.v1`); messageBox('Column Widths', 'Column widths were reset. They will apply after the console is reloaded.'); } },
+          ...libraryMenuEntries(), // v0.3 ui-library: separator + Mesh Library…
         ],
       },
       {

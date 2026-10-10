@@ -1,0 +1,15 @@
+/* v0.3 KPI sections (Lines, Resources). Extends charts/panels.css; tokens only. */
+.kp-box[hidden] { display: none; }
+.kp-tbl td.n { text-align: right; font: var(--fs-small) var(--font-mono); font-variant-numeric: tabular-nums; }
+.kp-lines td, .kp-res td { padding: 0 3px; }
+.kp-lines th, .kp-res th { padding: 0 3px; }
+.kp-lname { overflow: hidden; text-overflow: ellipsis; }
+.kp-lines .kp-oee b { width: 28px; }
+.kp-lines .kp-id { font-size: var(--fs-small); }
+.kp-lines span.kp-id:not(.kp-bn) { color: var(--c-text-dim); }
+.kp-rname { display: flex; align-items: center; gap: 4px; overflow: hidden; }
+.kp-rname small { color: var(--c-text-dim); font: var(--fs-small) var(--font-mono); }
+.kp-ric { display: inline-flex; width: 12px; height: 12px; flex: none; color: var(--c-text-dim); }
+.kp-res .kp-oee .trk > i { background: var(--c-text-dim); }
+.kp-res .kp-oee b { width: 34px; }
+.kp-tbl tr.row.sel td .kp-bn { color: var(--c-select-text) !important; }
