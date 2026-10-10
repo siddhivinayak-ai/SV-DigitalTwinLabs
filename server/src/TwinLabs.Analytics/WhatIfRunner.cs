@@ -38,7 +38,7 @@ public sealed class WhatIfRunner(ISimulationEngineFactory factory) : IWhatIfRunn
             () => baseReport = RunHeadless(baseline, duration),
             () => scenReport = RunHeadless(scenario, duration));
 
-        var deltas = BuildDeltas(baseReport!.Line, scenReport!.Line);
+        var deltas = BuildDeltas(baseReport!, scenReport!);
         sw.Stop();
         return new WhatIfResult(request.DurationS, seed, baseReport, scenReport, deltas, sw.ElapsedMilliseconds);
     }
@@ -68,6 +68,32 @@ public sealed class WhatIfRunner(ISimulationEngineFactory factory) : IWhatIfRunn
 
     public static IReadOnlyList<KpiDelta> BuildDeltas(LineKpi b, LineKpi s) =>
         Metrics.Select(m => Delta(m, Value(b, m), Value(s, m))).ToList();
+
+    /// <summary>
+    /// The line <see cref="Metrics"/> followed, when the plant has resources, by one
+    /// <c>resource:&lt;id&gt;:utilization</c> delta per resource (baseline order, then any scenario-only ids;
+    /// a resource missing from one side counts as 0 there).
+    /// </summary>
+    public static IReadOnlyList<KpiDelta> BuildDeltas(KpiReport b, KpiReport s)
+    {
+        ArgumentNullException.ThrowIfNull(b);
+        ArgumentNullException.ThrowIfNull(s);
+        var deltas = BuildDeltas(b.Line, s.Line).ToList();
+        if (b.Resources is null && s.Resources is null) return deltas;
+
+        var ids = new List<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var r in (b.Resources ?? []).Concat(s.Resources ?? []))
+            if (seen.Add(r.ResourceId)) ids.Add(r.ResourceId);
+
+        static double Util(KpiReport k, string id) =>
+            k.Resources?.FirstOrDefault(r => r.ResourceId == id)?.Utilization ?? 0;
+        foreach (var id in ids)
+            deltas.Add(Delta(ResourceUtilizationMetric(id), Util(b, id), Util(s, id)));
+        return deltas;
+    }
+
+    public static string ResourceUtilizationMetric(string resourceId) => $"resource:{resourceId}:utilization";
 
     private static KpiDelta Delta(string metric, double baseline, double scenario)
     {

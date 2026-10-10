@@ -1,0 +1,61 @@
+{
+  "id": "assembly-line",
+  "name": "Assembly Line - Three Stations with Day Shift",
+  "version": 1,
+  "seed": 23,
+  "assets": [
+    {"id": "SRC-01", "name": "Kit Supply", "kind": "source", "position": {"x": 0, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.6, "y": 1.4, "z": 1.6}, "downstream": ["CONV-01"], "params": {"arrivalIntervalS": 48, "arrivalStdS": 4}, "lineId": "sub-assembly"},
+    {"id": "CONV-01", "name": "Kit Feeder Conveyor", "kind": "conveyor", "position": {"x": 5.3, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 6, "y": 0.9, "z": 0.8}, "downstream": ["ASM-1"], "params": {"lengthM": 6, "speedMps": 0.2, "capacity": 5, "ratedKw": 1.2, "idleKw": 0.2}, "lineId": "sub-assembly"},
+    {"id": "ASM-1", "name": "Sub-Assembly Station 1 (Housing + PCB)", "kind": "machine", "position": {"x": 11.3, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 3, "y": 2, "z": 2.2}, "downstream": ["BUF-01"], "params": {"cycleTimeS": 34, "cycleTimeStdS": 3, "mtbfS": 14400, "mttrS": 360, "scrapRate": 0.008, "ratedKw": 6, "idleKw": 1.2, "ambientC": 24, "tempRiseC": 20, "vibBaselineMms": 0.9}, "lineId": "sub-assembly", "shiftId": "day"},
+    {"id": "BUF-01", "name": "Sub-Assembly Buffer", "kind": "buffer", "position": {"x": 15.2, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.8, "y": 1.2, "z": 1.2}, "downstream": ["ASM-2"], "params": {"capacity": 6}, "lineId": "sub-assembly"},
+    {"id": "ASM-2", "name": "Sub-Assembly Station 2 (Screwdriving)", "kind": "machine", "position": {"x": 19.1, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 3, "y": 2, "z": 2.2}, "downstream": ["BUF-02"], "params": {"cycleTimeS": 38, "cycleTimeStdS": 3, "mtbfS": 14400, "mttrS": 420, "scrapRate": 0.01, "ratedKw": 7, "idleKw": 1.2, "ambientC": 24, "tempRiseC": 22, "vibBaselineMms": 1}, "lineId": "sub-assembly", "shiftId": "day"},
+    {"id": "BUF-02", "name": "Final Assembly Buffer", "kind": "buffer", "position": {"x": 23, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.8, "y": 1.2, "z": 1.2}, "downstream": ["ASM-3"], "params": {"capacity": 6}, "lineId": "final-assembly"},
+    {"id": "ASM-3", "name": "Final Assembly Station 3 (Cover + Seal)", "kind": "machine", "position": {"x": 26.9, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 3, "y": 2, "z": 2.2}, "downstream": ["CONV-02"], "params": {"cycleTimeS": 32, "cycleTimeStdS": 2, "mtbfS": 14400, "mttrS": 360, "scrapRate": 0.008, "ratedKw": 6, "idleKw": 1.2, "ambientC": 24, "tempRiseC": 20, "vibBaselineMms": 0.9}, "lineId": "final-assembly", "shiftId": "day"},
+    {"id": "CONV-02", "name": "Transfer Conveyor", "kind": "conveyor", "position": {"x": 32.4, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 5, "y": 0.9, "z": 0.8}, "downstream": ["EOL-01"], "params": {"lengthM": 5, "speedMps": 0.25, "capacity": 4, "ratedKw": 1, "idleKw": 0.2}, "lineId": "final-assembly"},
+    {"id": "EOL-01", "name": "End-of-Line Functional Test", "kind": "inspection", "position": {"x": 37.6, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 2.4, "y": 2.2, "z": 2}, "downstream": ["PACK-01"], "params": {"cycleTimeS": 30, "cycleTimeStdS": 1.5, "mtbfS": 28800, "mttrS": 300, "scrapRate": 0.025, "ratedKw": 2.5, "idleKw": 0.8, "ambientC": 24, "tempRiseC": 10, "vibBaselineMms": 0.3}, "lineId": "final-assembly"},
+    {"id": "PACK-01", "name": "Boxing and Labelling", "kind": "machine", "position": {"x": 41.5, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 2.4, "y": 2, "z": 2}, "downstream": ["SNK-01"], "params": {"cycleTimeS": 20, "cycleTimeStdS": 1, "mtbfS": 10800, "mttrS": 360, "scrapRate": 0.001, "ratedKw": 4, "idleKw": 0.8, "ambientC": 24, "tempRiseC": 14, "vibBaselineMms": 0.8}, "lineId": "final-assembly"},
+    {"id": "SNK-01", "name": "Shipping Dock", "kind": "sink", "position": {"x": 45, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.6, "y": 1, "z": 1.6}, "downstream": [], "params": {}, "lineId": "final-assembly"}
+  ],
+  "sensors": [
+    {"id": "CONV-01.speed", "assetId": "CONV-01", "kind": "speed", "unit": "m/s", "noise": 0.005},
+    {"id": "CONV-01.level", "assetId": "CONV-01", "kind": "level", "unit": "pcs", "noise": 0},
+    {"id": "CONV-01.power", "assetId": "CONV-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "ASM-1.temp", "assetId": "ASM-1", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 54, "hiHi": 64},
+    {"id": "ASM-1.vib", "assetId": "ASM-1", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "ASM-1.power", "assetId": "ASM-1", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "ASM-1.current", "assetId": "ASM-1", "kind": "current", "unit": "A", "noise": 0.02, "hi": 11},
+    {"id": "BUF-01.level", "assetId": "BUF-01", "kind": "level", "unit": "pcs", "noise": 0, "hi": 5},
+    {"id": "ASM-2.temp", "assetId": "ASM-2", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 56, "hiHi": 66},
+    {"id": "ASM-2.vib", "assetId": "ASM-2", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "ASM-2.power", "assetId": "ASM-2", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "ASM-2.current", "assetId": "ASM-2", "kind": "current", "unit": "A", "noise": 0.02, "hi": 13},
+    {"id": "BUF-02.level", "assetId": "BUF-02", "kind": "level", "unit": "pcs", "noise": 0, "hi": 5},
+    {"id": "ASM-3.temp", "assetId": "ASM-3", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 54, "hiHi": 64},
+    {"id": "ASM-3.vib", "assetId": "ASM-3", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "ASM-3.power", "assetId": "ASM-3", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "ASM-3.current", "assetId": "ASM-3", "kind": "current", "unit": "A", "noise": 0.02, "hi": 11},
+    {"id": "CONV-02.speed", "assetId": "CONV-02", "kind": "speed", "unit": "m/s", "noise": 0.005},
+    {"id": "CONV-02.level", "assetId": "CONV-02", "kind": "level", "unit": "pcs", "noise": 0},
+    {"id": "CONV-02.power", "assetId": "CONV-02", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "EOL-01.temp", "assetId": "EOL-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 45, "hiHi": 55},
+    {"id": "EOL-01.vib", "assetId": "EOL-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 1.8, "hiHi": 2.8},
+    {"id": "EOL-01.power", "assetId": "EOL-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "EOL-01.rejects", "assetId": "EOL-01", "kind": "count", "unit": "pcs", "noise": 0},
+    {"id": "PACK-01.temp", "assetId": "PACK-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 50, "hiHi": 60},
+    {"id": "PACK-01.vib", "assetId": "PACK-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "PACK-01.power", "assetId": "PACK-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "PACK-01.current", "assetId": "PACK-01", "kind": "current", "unit": "A", "noise": 0.02, "hi": 8},
+    {"id": "SNK-01.good", "assetId": "SNK-01", "kind": "count", "unit": "pcs", "noise": 0}
+  ],
+  "lines": [
+    {"id": "sub-assembly", "name": "Sub-Assembly"},
+    {"id": "final-assembly", "name": "Final Assembly"}
+  ],
+  "calendar": {
+    "startHourOfDay": 6,
+    "shifts": [
+      {"id": "day", "name": "Day shift", "startHour": 6, "endHour": 14},
+      {"id": "evening", "name": "Evening shift", "startHour": 14, "endHour": 22}
+    ]
+  }
+}
