@@ -76,6 +76,7 @@ public sealed class TestOpcUaServer : IAsyncDisposable
                 MaxSessionCount = 20,
                 DiagnosticsEnabled = false,
                 ShutdownDelay = 0,
+                MaxRegistrationInterval = 0,
             },
         };
         await config.ValidateAsync(ApplicationType.Server);
@@ -87,6 +88,12 @@ public sealed class TestOpcUaServer : IAsyncDisposable
         var server = new TestServer(nodes ?? DefaultNodes());
         await app.StartAsync(server);
         return new TestOpcUaServer(app, server, port);
+    }
+
+    /// <summary>Restores <see cref="DefaultNodes"/> values with Good status (for tests sharing one server).</summary>
+    public void Reset()
+    {
+        foreach (var (name, value) in DefaultNodes()) SetValue(name, value);
     }
 
     /// <summary>Changes a node value (and its timestamps); subscribed clients get a data change.</summary>

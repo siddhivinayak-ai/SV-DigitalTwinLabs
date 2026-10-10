@@ -26,9 +26,25 @@ internal sealed class Recorder
     public bool HasValue(string address, double value) => Updates.Any(u => u.Address == address && u.Value == value);
 }
 
-// One class so tests run sequentially (they share the PKI folders and the machine's port range).
-public sealed class OpcUaTagSourceTests(ITestOutputHelper output)
+/// <summary>One server for the tests that only need a running server (starting one costs ~2 s, mostly the
+/// standard address space). Tests reset its values first.</summary>
+public sealed class SharedServerFixture : IAsyncLifetime
 {
+    public const int Port = 48411;
+    public TestOpcUaServer Server { get; private set; } = null!;
+    public async Task InitializeAsync() => Server = await TestOpcUaServer.StartAsync(Port);
+    public async Task DisposeAsync() => await Server.DisposeAsync();
+}
+
+// One class so tests run sequentially (they share the PKI folders and the machine's port range).
+public sealed class OpcUaTagSourceTests(ITestOutputHelper output, SharedServerFixture shared) : IClassFixture<SharedServerFixture>
+{
+    private TestOpcUaServer SharedServer()
+    {
+        shared.Server.Reset();
+        return shared.Server;
+    }
+
     private const string Temp = "ns=2;s=LineA.CNC-01.Temp";
     private const string State = "ns=2;s=LineA.CNC-01.State";
     private const string SinkGood = "ns=2;s=LineA.SNK-01.Good";
@@ -63,8 +79,8 @@ public sealed class OpcUaTagSourceTests(ITestOutputHelper output)
     [Fact]
     public async Task Values_flow_as_tag_updates_and_resolve()
     {
-        await using var server = await TestOpcUaServer.StartAsync(48411);
-        var conn = Conn(48411);
+        var server = SharedServer();
+        var conn = Conn(SharedServerFixture.Port);
         var plant = Plant(conn,
             new BindingDef("sensor:CNC-01.temp", "plc1", Temp),
             new BindingDef("asset:CNC-01.state", "plc1", State));
@@ -106,8 +122,8 @@ public sealed class OpcUaTagSourceTests(ITestOutputHelper output)
     [Fact]
     public async Task Shared_address_uses_one_monitored_item_and_feeds_both_targets()
     {
-        await using var server = await TestOpcUaServer.StartAsync(48412);
-        var conn = Conn(48412);
+        var server = SharedServer();
+        var conn = Conn(SharedServerFixture.Port);
         var plant = Plant(conn,
             new BindingDef("sensor:SNK-01.good", "plc1", SinkGood),
             new BindingDef("asset:SNK-01.good", "plc1", SinkGood, Scale: 2));
@@ -195,8 +211,8 @@ public sealed class OpcUaTagSourceTests(ITestOutputHelper output)
     [Fact]
     public async Task Stop_and_dispose_are_idempotent_and_stop_updates()
     {
-        await using var server = await TestOpcUaServer.StartAsync(48415);
-        var conn = Conn(48415);
+        var server = SharedServer();
+        var conn = Conn(SharedServerFixture.Port);
         var source = Factory().Create(conn);
         var rec = new Recorder(source);
 
@@ -220,8 +236,8 @@ public sealed class OpcUaTagSourceTests(ITestOutputHelper output)
     [Fact]
     public async Task Invalid_node_ids_are_summarised_while_staying_connected()
     {
-        await using var server = await TestOpcUaServer.StartAsync(48416);
-        var conn = Conn(48416);
+        var server = SharedServer();
+        var conn = Conn(SharedServerFixture.Port);
         await using var source = Factory().Create(conn);
         var rec = new Recorder(source);
         await source.StartAsync(
