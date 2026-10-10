@@ -727,7 +727,8 @@ export class BuilderCanvas {
     const s = worldToScreen(v, a.position.x, a.position.z);
     const r = aabb(a);
     const wpx = (r.x1 - r.x0) * v.scale, hpx = (r.z1 - r.z0) * v.scale;
-    const inside = wpx >= 46 && hpx >= 30;
+    g.font = `bold 11px Tahoma, "Segoe UI", sans-serif`;
+    const inside = hpx >= 30 && g.measureText(a.id).width <= wpx - 8;
     const gs = Math.min(14, Math.max(8, Math.min(wpx, hpx) * 0.32));
     const gy = inside ? s.sy - 7 : s.sy;
     if (Math.min(wpx, hpx) >= 12) this.glyph(g, T, a.kind, s.sx, gy, gs);

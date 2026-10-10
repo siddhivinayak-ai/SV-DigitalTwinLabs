@@ -61,7 +61,7 @@ export function registerBuilderUi(host: BuilderHost, ctx: PanelContext): void {
   // Dev hook: ?builder=1 opens the builder once the first snapshot (or 2 s) has arrived.
   if (new URLSearchParams(location.search).get('builder') === '1') {
     let done = false;
-    const go = () => { if (!done) { done = true; open(); } };
+    const go = () => { if (!done) { done = true; (window as unknown as { __svdtlBuilder?: BuilderWindow }).__svdtlBuilder = open(); } };
     const off = ctx.store.on('snapshot', () => { off(); setTimeout(go, 50); });
     setTimeout(go, 2000);
   }
