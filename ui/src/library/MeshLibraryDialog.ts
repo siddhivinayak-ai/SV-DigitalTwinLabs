@@ -92,7 +92,7 @@ export function openMeshLibraryDialog(ctx: PanelContext, backend: MeshBackend): 
       rows = await backend.list();
       grid.setRows(rows);
       const keepId = keep ?? selected?.id;
-      selected = rows.find((m) => m.id === keepId) ?? null;
+      selected = rows.find((m) => m.id === keepId) ?? rows[0] ?? null;
       grid.select(selected?.id ?? null);
       setStatus(`${rows.length} mesh${rows.length === 1 ? '' : 'es'}`, 'info');
     } catch (e) {
@@ -186,7 +186,7 @@ export function openMeshLibraryDialog(ctx: PanelContext, backend: MeshBackend): 
     }
   };
 
-  const off = [store.on('snapshot', () => { grid.setRows(rows); sync(); })];
+  const off = [store.on('snapshot', () => { grid.setRows(rows); sync(); }), store.on('selection', sync)];
   const dlg = Dialog.open({
     title: 'Mesh Library',
     icon: 'layout',

@@ -19,6 +19,6 @@ export function applyDevParams(store: TwinStore, focus?: (id: string) => void): 
       if (foc && store.assetDef(foc)) focus?.(foc);
     };
     if (store.plant) setTimeout(apply, 0);
-    else { const off = store.on('snapshot', () => { off(); setTimeout(apply, 0); }); }
+    else { const off = store.on('snapshot', () => { off(); setTimeout(apply, 1800); }); } // after dev plant swaps (library/devPlant.ts)
   }
 }
