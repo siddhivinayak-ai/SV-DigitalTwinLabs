@@ -46,6 +46,8 @@ export class Shell {
   private readonly dock: DockLayout;
   private readonly infoHost: HTMLDivElement;
   private infobar: HTMLDivElement | null = null;
+  /** v0.3 Plant Builder integration: extra File-menu entries (see extendFileMenu). */
+  private readonly fileExtras: MenuEntry[] = [];
 
   constructor(private readonly ctx: PanelContext, private readonly opt: ShellOptions) {
     const { store, source } = ctx;
@@ -123,6 +125,12 @@ export class Shell {
   }
 
   hideInfoBar(): void { this.infobar?.remove(); this.infobar = null; }
+
+  // ---- v0.3 Plant Builder integration (registerBuilderUi in builder/register.ts) ----
+  /** Prepend entries to the File menu. */
+  extendFileMenu(items: MenuEntry[]): void { this.fileExtras.push(...items); }
+  /** Add tool strip items after the analysis buttons. */
+  addToolItems(...els: HTMLElement[]): void { this.tool.el.querySelector('.grow')?.before(...els); }
 
   setTheme(t: Theme): void {
     this.ctx.store.setTheme(t);
@@ -223,6 +231,7 @@ export class Shell {
       {
         label: '&File',
         items: (): MenuEntry[] => [
+          ...this.fileExtras, // v0.3 Plant Builder integration
           { label: '&Export Sensor History (CSV)…', accel: accelText('export'), disabled: () => !store.plant, action: () => this.cmd('export') },
           { label: 'Export E&vent Log (CSV)', disabled: () => !store.events.length, action: () => this.exportEvents() },
           'sep',

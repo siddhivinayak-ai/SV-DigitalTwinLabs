@@ -14,6 +14,7 @@ import type { TwinSource } from './net/source';
 import { Shell, THEME_KEY } from './shell/Shell';
 import { storage } from './widgets/dom';
 import { postStatus } from './shell/status';
+import { registerBuilderUi } from './builder/register'; // v0.3 Plant Builder
 
 const params = new URLSearchParams(location.search);
 const useMock = params.get('source') === 'mock';
@@ -44,6 +45,7 @@ const shell = new Shell({ store, source }, {
     }
     : undefined,
 });
+registerBuilderUi(shell, { store, source }); // v0.3 Plant Builder
 shell.attach(document.getElementById('app')!);
 document.title = `SV TwinLabs — Line A Console${useMock ? ' (Demo)' : ''}`;
 source.connect();
