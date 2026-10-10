@@ -1,3 +1,5 @@
+using TwinLabs.Core.Contracts;
+
 namespace TwinLabs.Api.Hosting;
 
 /// <summary>Configuration section <c>Twin</c>.</summary>
@@ -22,4 +24,7 @@ public sealed class TwinOptions
 
     /// <summary>Sim-seconds of 1 Hz sensor history kept in memory.</summary>
     public int HistorySeconds { get; set; } = 36000;
+
+    /// <summary>v0.2: initial twin mode (<c>simulate</c> or <c>shadow</c>). Shadow falls back to simulate when the plant has no bindings.</summary>
+    public TwinMode Mode { get; set; } = TwinMode.Simulate;
 }

@@ -23,6 +23,28 @@ public static class ContractShape
         JsonNode.Parse(File.ReadAllText(Path.Combine(ContractsDir, "examples", file)))!;
 
     /// <summary>
+    /// <c>snapshot.json</c> data plus <c>connections[]</c> (shaped like <c>connection.json</c>). The v0.2 contract
+    /// documents <c>snapshot.connections[]</c> but the frozen example does not show it.
+    /// </summary>
+    public static JsonNode SnapshotDataExample()
+    {
+        var data = Example("snapshot.json")["data"]!.DeepClone();
+        data["connections"] = new JsonArray(ConnectionDataExample());
+        return data;
+    }
+
+    /// <summary>
+    /// <c>connection.json</c> data plus <c>error</c>: <see cref="TwinLabs.Core.Contracts.ConnectionStatus.Error"/> and
+    /// docs/V0.2-ConnectedTwin.md §4 define it, but the frozen example omits it.
+    /// </summary>
+    public static JsonNode ConnectionDataExample()
+    {
+        var data = Example("connection.json")["data"]!.DeepClone();
+        data["error"] = "connect failed";
+        return data;
+    }
+
+    /// <summary>
     /// Every property name in <paramref name="actual"/> must also appear (at the same path) in
     /// <paramref name="example"/>. Catches casing / naming drift without requiring optional fields.
     /// </summary>
