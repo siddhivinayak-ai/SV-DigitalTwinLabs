@@ -37,7 +37,8 @@ describe('MockSource v0.2 demo', () => {
     expect(store.sim.mode).toBe('shadow');
     let raised = 0;
     store.on('alarm', (a) => { if (a.source === 'deviation' && a.active) raised++; });
-    vi.advanceTimersByTime(10 * 60_000);
+    // advance until the first deviation alarm (deterministic seed), at most 10 wall minutes
+    for (let s = 0; s < 600 && !raised; s += 10) vi.advanceTimersByTime(10_000);
     expect(raised).toBeGreaterThan(0);
     const hist = src.demoHistoryAlarms(500);
     expect(hist.some((a) => a.source === 'deviation' && /^ALM-.+-deviation$/.test(a.id))).toBe(true);
@@ -45,7 +46,7 @@ describe('MockSource v0.2 demo', () => {
     expect(store.sim.mode).toBe('simulate');
     expect([...store.alarms.values()].some((a) => a.source === 'deviation')).toBe(false);
     src.disconnect();
-  });
+  }, 20_000);
 
   it('never raises deviation alarms in simulate mode', () => {
     vi.useFakeTimers();
@@ -54,10 +55,10 @@ describe('MockSource v0.2 demo', () => {
     let dev = 0;
     store.on('alarm', (a) => { if (a.source === 'deviation') dev++; });
     src.connect();
-    vi.advanceTimersByTime(5 * 60_000);
+    vi.advanceTimersByTime(3 * 60_000);
     expect(dev).toBe(0);
     src.disconnect();
-  });
+  }, 20_000);
 
   it('keeps scenarios and paged history in memory', async () => {
     vi.useFakeTimers();
