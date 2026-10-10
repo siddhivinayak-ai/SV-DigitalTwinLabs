@@ -224,12 +224,12 @@ export class PropsPanel {
     const std = button({ text: 'Add Standard', small: true, title: 'Add the standard sensors for this kind that are missing', onClick: () => this.addStandard() });
     this.sensorTools.append(this.addKind, add, rm, h('span.sep'), std);
     const cols: Column<SensorDef>[] = [
-      { key: 'suffix', title: 'Id suffix', width: 74, text: (s) => sensorSuffix(s), sortable: false, mono: true },
-      { key: 'kind', title: 'Kind', width: 80, sortable: false },
-      { key: 'unit', title: 'Unit', width: 42, sortable: false },
-      { key: 'noise', title: 'Noise', width: 50, align: 'right', text: (s) => formatNum(s.noise), sortable: false },
-      { key: 'hi', title: 'Hi', width: 44, align: 'right', text: (s) => (s.hi === undefined ? '' : formatNum(s.hi)), sortable: false },
-      { key: 'hiHi', title: 'HiHi', width: 44, align: 'right', text: (s) => (s.hiHi === undefined ? '' : formatNum(s.hiHi)), sortable: false,
+      { key: 'suffix', title: 'Id suffix', width: 56, text: (s) => sensorSuffix(s), sortable: false, mono: true },
+      { key: 'kind', title: 'Kind', width: 70, sortable: false },
+      { key: 'unit', title: 'Unit', width: 40, sortable: false },
+      { key: 'noise', title: 'Noise', width: 44, align: 'right', text: (s) => formatNum(s.noise), sortable: false },
+      { key: 'hi', title: 'Hi', width: 38, align: 'right', text: (s) => (s.hi === undefined ? '' : String(s.hi)), sortable: false },
+      { key: 'hiHi', title: 'HiHi', width: 40, align: 'right', text: (s) => (s.hiHi === undefined ? '' : String(s.hiHi)), sortable: false,
         cellClass: (s) => (s.hi !== undefined && s.hiHi !== undefined && s.hiHi <= s.hi ? 'tx-warn' : '') },
     ];
     this.sensorGrid = new DataGrid<SensorDef>({ columns: cols, rowId: (s) => s.id, emptyText: '(no sensors — Add one)', framed: true });
