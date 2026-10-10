@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TwinLabs.Core\TwinLabs.Core.csproj" />
+    <ProjectReference Include="..\..\src\TwinLabs.Simulation\TwinLabs.Simulation.csproj" />
+    <ProjectReference Include="..\..\src\TwinLabs.Analytics\TwinLabs.Analytics.csproj" />
   </ItemGroup>
 
 </Project>

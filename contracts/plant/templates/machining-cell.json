@@ -1,0 +1,50 @@
+{
+  "id": "machining-cell",
+  "name": "Machining Cell - Twin CNC with Shared Operator",
+  "version": 1,
+  "seed": 11,
+  "assets": [
+    {"id": "SRC-01", "name": "Bar Stock Feeder", "kind": "source", "position": {"x": 0, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.6, "y": 1.4, "z": 1.6}, "downstream": ["CONV-01"], "params": {"arrivalIntervalS": 30, "arrivalStdS": 3}, "lineId": "machining"},
+    {"id": "CONV-01", "name": "Infeed Conveyor", "kind": "conveyor", "position": {"x": 5.3, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 6, "y": 0.9, "z": 0.8}, "downstream": ["CNC-01", "CNC-02"], "params": {"lengthM": 6, "speedMps": 0.25, "capacity": 5, "ratedKw": 1.5, "idleKw": 0.2}, "lineId": "machining"},
+    {"id": "CNC-01", "name": "Vertical Machining Centre #1", "kind": "machine", "position": {"x": 11.3, "y": 0, "z": -1.7}, "rotationY": 0, "size": {"x": 3, "y": 2.4, "z": 2.2}, "downstream": ["BUF-01"], "params": {"cycleTimeS": 40, "cycleTimeStdS": 3, "mtbfS": 21600, "mttrS": 420, "scrapRate": 0.015, "ratedKw": 15, "idleKw": 2.5, "ambientC": 24, "tempRiseC": 36, "vibBaselineMms": 1.2}, "lineId": "machining", "resourceId": "OP-01"},
+    {"id": "CNC-02", "name": "Vertical Machining Centre #2", "kind": "machine", "position": {"x": 11.3, "y": 0, "z": 1.7}, "rotationY": 0, "size": {"x": 3, "y": 2.4, "z": 2.2}, "downstream": ["BUF-01"], "params": {"cycleTimeS": 40, "cycleTimeStdS": 3, "mtbfS": 21600, "mttrS": 420, "scrapRate": 0.015, "ratedKw": 15, "idleKw": 2.5, "ambientC": 24, "tempRiseC": 36, "vibBaselineMms": 1.2}, "lineId": "machining", "resourceId": "OP-01"},
+    {"id": "BUF-01", "name": "Machined Parts Buffer", "kind": "buffer", "position": {"x": 15.2, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.8, "y": 1.2, "z": 1.2}, "downstream": ["ROB-01"], "params": {"capacity": 8}, "lineId": "machining"},
+    {"id": "ROB-01", "name": "Deburr and Transfer Robot", "kind": "robot", "position": {"x": 18.2, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.2, "y": 2, "z": 1.2}, "downstream": ["QC-01"], "params": {"cycleTimeS": 18, "cycleTimeStdS": 1, "mtbfS": 14400, "mttrS": 300, "scrapRate": 0.002, "ratedKw": 4, "idleKw": 0.8, "ambientC": 24, "tempRiseC": 18, "vibBaselineMms": 0.6}, "lineId": "machining"},
+    {"id": "QC-01", "name": "CMM Inspection", "kind": "inspection", "position": {"x": 21.4, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 2.2, "y": 2.2, "z": 1.8}, "downstream": ["PACK-01"], "params": {"cycleTimeS": 20, "cycleTimeStdS": 1, "mtbfS": 28800, "mttrS": 240, "scrapRate": 0.02, "ratedKw": 1.5, "idleKw": 0.6, "ambientC": 24, "tempRiseC": 8, "vibBaselineMms": 0.2}, "lineId": "machining"},
+    {"id": "PACK-01", "name": "Packaging Station", "kind": "machine", "position": {"x": 25.2, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 2.4, "y": 2, "z": 2}, "downstream": ["SNK-01"], "params": {"cycleTimeS": 15, "cycleTimeStdS": 1, "mtbfS": 10800, "mttrS": 360, "scrapRate": 0.001, "ratedKw": 5, "idleKw": 1, "ambientC": 24, "tempRiseC": 15, "vibBaselineMms": 0.8}, "lineId": "machining"},
+    {"id": "SNK-01", "name": "Finished Goods Dock", "kind": "sink", "position": {"x": 28.7, "y": 0, "z": 0}, "rotationY": 0, "size": {"x": 1.6, "y": 1, "z": 1.6}, "downstream": [], "params": {}, "lineId": "machining"}
+  ],
+  "sensors": [
+    {"id": "CONV-01.speed", "assetId": "CONV-01", "kind": "speed", "unit": "m/s", "noise": 0.005},
+    {"id": "CONV-01.level", "assetId": "CONV-01", "kind": "level", "unit": "pcs", "noise": 0},
+    {"id": "CONV-01.power", "assetId": "CONV-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "CNC-01.temp", "assetId": "CNC-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 70, "hiHi": 80},
+    {"id": "CNC-01.vib", "assetId": "CNC-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "CNC-01.power", "assetId": "CNC-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "CNC-01.current", "assetId": "CNC-01", "kind": "current", "unit": "A", "noise": 0.02, "hi": 27},
+    {"id": "CNC-02.temp", "assetId": "CNC-02", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 70, "hiHi": 80},
+    {"id": "CNC-02.vib", "assetId": "CNC-02", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "CNC-02.power", "assetId": "CNC-02", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "CNC-02.current", "assetId": "CNC-02", "kind": "current", "unit": "A", "noise": 0.02, "hi": 27},
+    {"id": "BUF-01.level", "assetId": "BUF-01", "kind": "level", "unit": "pcs", "noise": 0, "hi": 7},
+    {"id": "ROB-01.temp", "assetId": "ROB-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 55, "hiHi": 65},
+    {"id": "ROB-01.vib", "assetId": "ROB-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 2.8, "hiHi": 4.5},
+    {"id": "ROB-01.power", "assetId": "ROB-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "ROB-01.current", "assetId": "ROB-01", "kind": "current", "unit": "A", "noise": 0.02, "hi": 8},
+    {"id": "QC-01.temp", "assetId": "QC-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 45, "hiHi": 55},
+    {"id": "QC-01.vib", "assetId": "QC-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 1.8, "hiHi": 2.8},
+    {"id": "QC-01.power", "assetId": "QC-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "QC-01.rejects", "assetId": "QC-01", "kind": "count", "unit": "pcs", "noise": 0},
+    {"id": "PACK-01.temp", "assetId": "PACK-01", "kind": "temperature", "unit": "°C", "noise": 0.005, "hi": 50, "hiHi": 60},
+    {"id": "PACK-01.vib", "assetId": "PACK-01", "kind": "vibration", "unit": "mm/s", "noise": 0.04, "hi": 4.5, "hiHi": 7.1},
+    {"id": "PACK-01.power", "assetId": "PACK-01", "kind": "power", "unit": "kW", "noise": 0.02},
+    {"id": "PACK-01.current", "assetId": "PACK-01", "kind": "current", "unit": "A", "noise": 0.02, "hi": 9},
+    {"id": "SNK-01.good", "assetId": "SNK-01", "kind": "count", "unit": "pcs", "noise": 0}
+  ],
+  "lines": [
+    {"id": "machining", "name": "Machining Cell"}
+  ],
+  "resources": [
+    {"id": "OP-01", "name": "CNC Operator", "kind": "operator", "count": 1}
+  ]
+}
