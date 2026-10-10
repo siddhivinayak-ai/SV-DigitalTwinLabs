@@ -16,12 +16,10 @@ import {
 /** Age above which the "last value" cell is highlighted (contract: tags older than 5 s are stale). */
 const STALE_MS = 5000;
 
-const EXAMPLE = `"connections": [
-  { "id": "plc1", "kind": "opcua", "endpoint": "opc.tcp://localhost:4840/twinlabs" }
-],
-"bindings": [
-  { "target": "sensor:CNC-01.temp", "connectionId": "plc1", "address": "ns=2;s=LineA.CNC-01.Temp" }
-]`;
+const EXAMPLE = `"connections": [{ "id": "plc1", "kind": "opcua",
+    "endpoint": "opc.tcp://localhost:4840/twinlabs" }],
+"bindings": [{ "target": "sensor:CNC-01.temp", "connectionId": "plc1",
+    "address": "ns=2;s=LineA.CNC-01.Temp" }]`;
 
 export const createConnectionsPanel: PanelFactory = (ctx) => {
   const { store, source } = ctx;
