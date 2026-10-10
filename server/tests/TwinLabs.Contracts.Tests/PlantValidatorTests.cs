@@ -514,8 +514,11 @@ public class PlantValidatorTests
         var first = PlantValidator.Validate(p);
         Assert.Empty(first.Issues);
 
+        // Warm up past tiered JIT (tier-0 code is several times slower than steady state).
+        for (var i = 0; i < 100; i++) PlantValidator.Validate(p);
+
         var times = new List<double>();
-        for (var i = 0; i < 25; i++)
+        for (var i = 0; i < 51; i++)
         {
             var sw = Stopwatch.StartNew();
             PlantValidator.Validate(p);
